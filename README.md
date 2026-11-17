@@ -1,157 +1,127 @@
-# Voice Khata: Hands-Free Indic Audio Ledger for High-Noise Counters
+# ANACONDA: TITAN COIL
+### *Eat the City. Coil the Sky.*
 
-PS2: Gnani Voice Hackathon Evaluation Platform & Zero-Touch Credit Journal.
+[![WebGL 3D](https://img.shields.io/badge/WebGL-Three.js_r128-00ffcc?style=for-the-badge&logo=three.js)](https://threejs.org/)
+[![Web Audio API](https://img.shields.io/badge/Audio-Web_Audio_Synth-ff00aa?style=for-the-badge)](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
+[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-v3.4-38bdf8?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
-Voice Khata is an Indic speech-driven double-entry bookkeeping engine designed specifically for the acoustic challenges of Indian kirana counters during rush hour. It parses code-mixed Hindi, Kannada, Tamil, and English utterances, normalizes Indic number phrases, handles in-stream verbal corrections, resolves customer homonyms, and commits encrypted transactions in under 2000 milliseconds without requiring manual touch input.
-
----
-
-## 1. Architectural Overview
-
-```
-[Acoustic Audio Ingest]
-          |
-          v
-[Web Audio API DSP] ---> High-Pass Filter (140Hz) + Low-Pass Filter (3600Hz) + 50Hz Notch Filter
-          |
-          v
-[Speech Recognition Engine] ---> Interim & Final Token Streams (hi-IN, en-IN, kn-IN, ta-IN)
-          |
-          v
-[Indic Code-Mixed Parser] ---> AST Tokenizer + Indic Number Normalizer + Multi-Clause Splitter
-          |
-    +-----+---------------------------------+
-    |                                       |
-    v                                       v
-[Spoken Self-Correction]           [Homonym Disambiguation Engine]
-Mutates uncommitted buffer,        Triggers sub-400ms TTS voice prompt:
-strikes discarded tokens,         "Kaunsa Ramesh? Dairy wala ya Auto wala?"
-commits final currency node.       Locks transaction in [PENDING_DISAMBIGUATION].
-    |                                       |
-    +------------------+--------------------+
-                       |
-                       v
-[Double-Entry Ledger State Machine]
-                       |
-                       v
-[WebCrypto AES-GCM-256 Engine] ---> SHA-256 Digest Computation
-                       |
-                       v
-[Local-First IndexedDB Store] ---> Hardware-Bound Persistence (Zero Cloud Retention)
-```
+An arcade-grade, full-screen **3D WebGL giant snake city destruction simulation game**. Control a massive, hyper-realistic green anaconda as it coils around skyscrapers, slithers across planetary highways, crushes enemy military defenses, and evolves into an apex cybernetic titan.
 
 ---
 
-## 2. Core Modules & PS2 Hackathon Deliverables
-
-### A. Direct Hero & Live Voice Console
-- Push-to-Talk mechanical switch with spacebar hotkey binding.
-- 60fps Web Audio API Canvas spectrum analyzer and time-domain oscillograph (512-point FFT, Hanning window).
-- Low-poly 3D Three.js countertop hardware module reacting in real time to microphone frequency bands.
-- Wake-phrase recognition: detects "Khata", "Suno Khata", and "Voice Khata" prefixes.
-
-### B. Acoustic Shop-Noise Simulator (Live Judging Evaluation)
-- Built-in noise mixer generating realistic counter noise conditions:
-  - Low-frequency vehicular street rumble (brownian low-pass filtered noise).
-  - Periodic scooter and auto horn clusters (dual-tone 430Hz and 540Hz sawtooth oscillators).
-  - Multi-talker crowd murmur (band-pass filtered 850Hz chatter).
-- SNR selector: 0dB, -3dB, and -6dB SNR.
-- DSP Noise Gate and Voice Clarity toggle: 140Hz high-pass filter, 3600Hz speech envelope low-pass filter, and 50Hz AC hum notch filter.
-
-### C. Indic Code-Mixed NLP & Entity Parser
-- **Multi-Format Number Normalization:**
-  - Converts compound Hindi verbal numbers ("teen sau chaalis", "pachees sau", "dedh hazaar", "dhai sau") into exact currency values (e.g. ₹340.00, ₹2,500.00).
-  - Normalizes Kannada and Tamil numerals ("eradu nooru", "aivooru", "irunooru", "ayiram").
-  - Handles mixed English numbers ("three forty", "two hundred fifty", "5 sau").
-- **Multi-Clause Transaction Splitting:**
-  - Utterance: `"Ramesh ka 340 udhaar, kal 200 diya tha"`
-  - Automatically splits into two atomic records:
-    1. Customer: Ramesh | Type: UDHAAR | Amount: +₹340.00 | Date: Today
-    2. Customer: Ramesh | Type: JAMA | Amount: -₹200.00 | Date: Yesterday (-1d)
-- **Spoken Self-Correction State Machine:**
-  - Utterance: `"Suresh ka 500 udhaar... nahi, 430"`
-  - Detects correction barrier ("nahi"), strikes through 500 in the AST token stream, and commits ₹430.00 with audit tag `[CORRECTED_IN_STREAM]`.
-- **Homonym Disambiguation Prompt:**
-  - Detects duplicate first names in pre-populated customer directory (Ramesh Sharma: Dairy vs Ramesh Verma: Auto).
-  - Dispatches sub-400ms spoken voice prompt: `"Kaunsa Ramesh? Dairy wala ya Auto wala?"`.
-  - Transaction enters volatile `[PENDING_DISAMBIGUATION]` lock until answered verbally or selected on screen.
-- **Sub-2-Second Spoken Query Responder:**
-  - Spoken query: `"Aaj kitna udhaar gaya?"`
-  - Calculates daily total credit from IndexedDB and responds via Web Speech Synthesis: `"Aaj kul 1,280 rupaye ka udhaar gaya hai."`
-  - Displays live millisecond latency telemetry: `[TTFA: 380ms]`, `[E2E: 520ms]`.
-
-### D. Traditional Bahi-Khata Tabular Ledger
-- Styled after an authentic Indian red-cloth Bahi-Khata combined with Swiss tabular typography.
-- JetBrains Mono for figures, Space Grotesk for headers.
-- Real-time client-side encryption via WebCrypto AES-GCM-256 with SHA-256 tamper-evident digest.
-- Customer balance drawer and running statement audit trails.
-
-### E. Polite Opt-In Reminder Generator (DPDP Act 2023)
-- Preview modal displaying non-threatening, respectful payment reminders in Hindi and English.
-- Hard guardrail: generation is locked unless `OPT_IN_CONSENT === true`.
-- Verifies compliance with Section 6 of India's Digital Personal Data Protection Act, 2023.
+## 🎮 Play Live
+- **GitHub Repository**: [https://github.com/jayvirjadeja008-gif/anaconda-titan-coil](https://github.com/jayvirjadeja008-gif/anaconda-titan-coil)
+- **GitHub Pages**: Once enabled in repo Settings -> Pages -> Deploy from branch `main` (`/` root), the game is live at `https://jayvirjadeja008-gif.github.io/anaconda-titan-coil/`
 
 ---
 
-## 3. Judge Quick-Test Deck
+## 🌟 Key Features
 
-The application includes a pre-loaded deck of 6 deterministic evaluation cases for immediate one-click testing:
+### 1. 🐍 Authentic Procedural Anaconda Anatomy & Physics
+- **Realistic S-Wave Locomotion**: 40+ dynamic body segments undulating with propagating transverse sine waves and natural head leading orientation.
+- **GLSL Keratin Scale Shader**: Procedural diamond-interlocking keratin scale shader with dark oval dorsal saddles, golden-ochre rings, cream belly scutes, and wet specular muscle shine.
+- **4 Selectable Snake Morphs**:
+  - 🐍 **Green Anaconda** (*Eunectes murinus*): Classic Amazonian camouflage with golden eye slits.
+  - ⚡ **Cyber Neon**: Midnight carbon scales with pulsing electric cyan & hot-magenta hex veins.
+  - 🌋 **Magma Drake**: Volcanic basalt scales with incandescent molten lava fissures.
+  - 👑 **Solar Orochi**: Pearl-white scales with shimmering 24k gold diamond patterns and ruby eyes.
 
-| Test ID | Spoken Phrase | Expected Pipeline Output |
+### 2. ☀️ Daylight Metropolis (Light Mode) & 🌙 Cyberpunk Night
+- **Dynamic 3D Atmosphere Shift**: Seamlessly switch between bright, sunny high-noon daylight and neon-drenched cyberpunk night with **`L`** key or the UI toggle.
+- **Sun & Moon Transitions**: The neon pink moon transforms into a radiant golden sun with an active solar corona ring.
+- **Frosted Light HUD**: High-contrast, clean frosted ceramic UI skin with emerald telemetry indicators.
+
+### 3. 🔊 Universal Audio & Procedural Synthesizer
+- **Zero-Asset Web Audio API Engine**: Dynamic basslines, acid spit sweeps, crunch mastication, building rubble explosions, and alert arpeggios generated entirely in real time.
+- **One-Click Sound Toggle**: Instant mute/unmute accessible on the Title Screen, in-game HUD, Pause menu, or via the **`M`** hotkey.
+- **Master Gain Clamp**: Hardware-level instantaneous silence with `localStorage` memory.
+
+### 4. 💥 Tactical Arcade Combat & Carnage Streaks
+- **Constriction Crushing**: Wrap around skyscrapers and hold **`E`** to crush structures into tumbling concrete debris.
+- **3D Floating Action Popups**: Real-time floating damage, points, and ability notifications (`+100 CHOMP!`, `💥 CRUSH! +800`, `⚡ TERMINATED!`).
+- **Carnage Streak Multiplier**:
+  - **3x**: `⚡ 3x HUNTER STREAK!`
+  - **7x**: `🔥 7x APEX PREDATOR!`
+  - **12x**: `👑 12x TITAN OMNIVORE!` (triggers Fire Rampage invincibility & camera shockwave).
+- **Abilities**:
+  - **Acid Venom Spit (`Q`)**: Long-range corrosive projectile that melts tanks and drone swarms.
+  - **Tail Smash (`F`)**: Kinetic ground shockwave that shatters nearby ground units.
+  - **Thermal Predator Vision (`R`)**: Heat-signature highlight with cinematic slow-motion tracking.
+  - **Skin Shedding (`X`)**: Leaves behind a decoy husk while restoring full health.
+
+---
+
+## 🕹️ Controls Reference
+
+| Action | Keyboard / Mouse | Touch / Mobile |
 | :--- | :--- | :--- |
-| **TEST_01** | `"Ramesh ka 340 udhaar, kal 200 diya tha"` | Splits into two atomic entries: +₹340 Udhaar (Today) and -₹200 Jama (Yesterday). |
-| **TEST_02** | `"Suresh ka 500 udhaar... nahi, 430"` | Striking 500, commits 430 with `[CORRECTED_IN_STREAM]` audit tag. |
-| **TEST_03** | `"Ramesh ka 340 udhaar"` | Homonym detected. Fires voice prompt: "Kaunsa Ramesh? Dairy wala ya Auto wala?". |
-| **TEST_04** | `"Aaj kitna udhaar gaya?"` | Spoken balance query responder. Fires TTS answer with `[TTFA: ~380ms]`. |
-| **TEST_05** | `"Pooja ka teen sau chaalis udhaar"` | Indic verbal number normalization: "teen sau chaalis" -> ₹340.00. |
-| **TEST_06** | `"Anand ka two hundred fifty jama, kal ka baaki"` | Code-mixed Kannada/English: ₹250.00 Jama, anchored to yesterday. |
-
-Judges can either click `[INJECT_AUDIO_STREAM]` to feed the phrase through the streaming recognizer or use their own microphone with the `[INJECT_SHOP_NOISE]` simulator active.
-
----
-
-## 4. Hardware Design System & Constraints
-
-- **Color Palette:**
-  - Warm Paper: `#F4F1EA`
-  - Carbon Black: `#141413`
-  - Kirana Ledger Red: `#D9381E`
-  - Brass Accent: `#C88A2B`
-  - Thermal Receipt Grey: `#E2DFD7`
-- **Architectural Edges:** Sharp 0px or 2px corner radii with 1px solid structural borders.
-- **Tactile Depression:** Mechanical button depression on click (`transform: translateY(2px)` with shadow collapse).
-- **Typography:** Space Grotesk (headers) and JetBrains Mono (numerical tabular figures and technical labels).
-- **Spatial 3D Transitions:** Perspective transforms (`perspective: 1400px`, `transform-style: preserve-3d`) shifting across a physical countertop stage over 450ms (`cubic-bezier(0.22, 1, 0.36, 1)`).
-- **Prohibitions Enforced:** Zero purple/magenta gradients, zero pill buttons, zero fake reviews/metrics, zero em dashes, zero emojis, zero stock photos, and zero cursor hijacking.
+| **Steer Left / Right** | `A` / `D` or `Left` / `Right` Arrow (or Mouse Auto-steer) | Left Analog Joystick |
+| **Sprint / Speed Boost** | Hold `Shift` | Hold `SPRINT` |
+| **Jump / Aerial Leap** | `Spacebar` | Tap `JUMP` |
+| **Wrap & Squeeze Structure** | Hold `E` near buildings | Hold `SQUEEZE` |
+| **Acid Venom Spit** | `Q` | Tap `VENOM` |
+| **Tail Smash / Shockwave** | `F` | Tap `SMASH` |
+| **Thermal Heat Vision** | `R` (Slow-motion prey highlight) | Tap `HEAT` |
+| **Shed Skin** | `X` (Full heal + decoy husk) | Ability Cluster |
+| **Toggle Mute / Unmute** | **`M`** (or Click Mute Button) | Tap `[ 🔊 SOUND ]` |
+| **Toggle Light / Night Mode** | **`L`** (or Click Theme Button) | Tap `[ ☀️ DAYLIGHT ]` |
+| **Toggle Fullscreen** | Click `[ ⛶ FULLSCREEN ]` | Click `[ ⛶ FULLSCREEN ]` |
+| **Pause Game** | `Escape` or `P` | Tap `[ ⏸ PAUSE ]` |
 
 ---
 
-## 5. Development & Production Deployment
+## 🛠️ Local Development & Quickstart
 
 ### Prerequisites
-- Node.js 18+
-- npm or yarn
+- Modern web browser (Chrome, Edge, Safari, Firefox) with WebGL and Web Audio API support.
+- Node.js 18+ (optional, for development server).
 
-### Local Setup
+### Running Locally (Zero Build Dependencies)
+You can directly open `index.html` in any browser or serve it using Python:
+```bash
+python3 -m http.server 4173
+# Open http://localhost:4173/
+```
+
+### Running with Vite
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev      # Local dev server at http://localhost:5173/
+npm run build    # Production build to dist/
+npm run preview  # Preview production build at http://localhost:4173/
 ```
-
-### Production Build
-```bash
-cd frontend
-npm run build
-```
-
-### Production Custom Domain (CNAME)
-A production `CNAME` file configured for `khata.yourdomain.in` is placed in `frontend/public/CNAME`. The Custom Domain Configuration modal in the UI displays real-time DNS verification and BIND zone record formats.
 
 ---
 
-## 6. Privacy & Legal Compliance
+## 📐 Architecture & Technology Stack
 
-- **Storage Boundary:** Local-first device persistence. No remote customer database sync without merchant opt-in.
-- **Audio Stream:** 100% ephemeral in volatile RAM. Zero raw voice recording saved to disk.
-- **Regulatory Compliance:** Designed in adherence to India DPDP Act 2023, Information Technology Act 2000, and Reserve Bank of India (RBI) Fair Practices Code for retail operations.
+```
++-------------------------------------------------------------+
+|                     ANACONDA: TITAN COIL                    |
++-------------------------------------------------------------+
+                               |
+        +----------------------+----------------------+
+        |                                             |
+        v                                             v
+[Three.js WebGL Engine]                     [Web Audio API Engine]
+  - Procedural Spherical Planet               - Dynamic 8-step bassline
+  - Custom GLSL Scale Shader                  - Procedural white noise burst
+  - InstancedMesh 4-District City             - Frequency-ramping synth sweeps
+  - Floating 3D -> 2D HUD Projection          - Master Gain Zero-Leak Mute
+        |                                             |
+        +----------------------+----------------------+
+                               |
+                               v
+                  [Arcade State Machine]
+                    - Fixed-dt Physics loop (60 FPS)
+                    - District Progression & Boss Spawns
+                    - Streak Multiplier & Mutation Upgrades
+                    - localStorage High Scores & State
+```
+
+---
+
+## 📜 License
+Distributed under the **MIT License**. Free for commercial and non-commercial use.

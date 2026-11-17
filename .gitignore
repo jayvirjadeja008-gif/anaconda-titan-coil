@@ -60,3 +60,12 @@ Thumbs.db
 *.swp
 *.swo
 .qodo/
+
+# Previous project local files
+backend/
+*.voice-khata.*
+anaconda_raw.html
+anaconda_clean.html
+Dockerfile.backend
+docker-compose.yml
+start.sh

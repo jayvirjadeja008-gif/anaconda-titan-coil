@@ -1,0 +1,3208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ANACONDA: TITAN COIL — Eat the City. Coil the Sky.</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap');
+    * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+      background: #060411; color: #f8fafc; font-family: 'Rajdhani', sans-serif;
+      touch-action: none;
+    }
+    .font-cyber { font-family: 'Orbitron', sans-serif; }
+    #game-canvas {
+      position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 1;
+    }
+    /* Screen FX Overlays */
+    #predator-overlay {
+      position: fixed; inset: 0; pointer-events: none; z-index: 5; opacity: 0;
+      transition: opacity 0.25s ease;
+      background: radial-gradient(circle at 50% 50%, rgba(0, 255, 255, 0.08) 0%, rgba(255, 0, 128, 0.28) 70%, rgba(18, 0, 40, 0.65) 100%);
+      mix-blend-mode: screen;
+    }
+    #rampage-overlay {
+      position: fixed; inset: 0; pointer-events: none; z-index: 6; opacity: 0;
+      transition: opacity 0.2s ease;
+      box-shadow: inset 0 0 90px rgba(255, 50, 0, 0.65), inset 0 0 30px rgba(255, 200, 0, 0.5);
+    }
+    #speed-lines {
+      position: fixed; inset: 0; pointer-events: none; z-index: 4; opacity: 0;
+      transition: opacity 0.15s ease;
+      background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(0,255,204,0.0) 0deg, rgba(0,255,204,0.08) 1.5deg, rgba(0,255,204,0.0) 3deg);
+    }
+    #damage-flash {
+      position: fixed; inset: 0; pointer-events: none; z-index: 7; opacity: 0;
+      background: radial-gradient(circle, transparent 40%, rgba(255, 0, 85, 0.55) 100%);
+      transition: opacity 0.12s ease;
+    }
+    /* Custom Neon Scrollbar & Panels */
+    .cyber-panel {
+      background: rgba(10, 8, 26, 0.84);
+      border: 1px solid rgba(0, 255, 204, 0.35);
+      box-shadow: 0 0 24px rgba(0, 255, 204, 0.14), inset 0 0 15px rgba(255, 0, 128, 0.08);
+      backdrop-filter: blur(8px);
+    }
+    .cyber-btn {
+      background: linear-gradient(135deg, rgba(0, 255, 204, 0.16), rgba(255, 0, 128, 0.16));
+      border: 1px solid rgba(0, 255, 204, 0.6);
+      color: #e2f8f5;
+      transition: all 0.18s ease;
+      text-shadow: 0 0 8px rgba(0, 255, 204, 0.5);
+    }
+    .cyber-btn:hover, .cyber-btn:active {
+      background: linear-gradient(135deg, rgba(0, 255, 204, 0.38), rgba(255, 0, 128, 0.38));
+      box-shadow: 0 0 18px rgba(0, 255, 204, 0.55);
+      transform: translateY(-1px);
+    }
+    .cyber-btn-active {
+      background: linear-gradient(135deg, rgba(0, 255, 204, 0.45), rgba(255, 0, 128, 0.45)) !important;
+      border-color: #00ffcc !important;
+      box-shadow: 0 0 16px rgba(0, 255, 204, 0.65);
+    }
+    @keyframes pulseGlow {
+      0%, 100% { filter: drop-shadow(0 0 8px rgba(0, 255, 204, 0.8)); }
+      50% { filter: drop-shadow(0 0 18px rgba(255, 0, 128, 0.95)); }
+    }
+    .title-glow { animation: pulseGlow 3s infinite ease-in-out; }
+    .touch-btn {
+      background: rgba(12, 10, 32, 0.72);
+      border: 1.5px solid rgba(0, 255, 204, 0.55);
+      box-shadow: 0 0 12px rgba(0, 255, 204, 0.25);
+      backdrop-filter: blur(4px);
+    }
+    .touch-btn:active {
+      background: rgba(0, 255, 204, 0.35);
+      transform: scale(0.93);
+    }
+  
+    /* ================= LIGHT MODE OVERRIDES ================= */
+    body.theme-light {
+      background: #dbeafe !important;
+      color: #0f172a !important;
+    }
+    body.theme-light .cyber-panel {
+      background: rgba(255, 255, 255, 0.90) !important;
+      border-color: rgba(13, 148, 136, 0.5) !important;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12), inset 0 0 15px rgba(13, 148, 136, 0.06) !important;
+      color: #0f172a !important;
+    }
+    body.theme-light .cyber-btn {
+      background: linear-gradient(135deg, rgba(20, 184, 166, 0.16), rgba(244, 63, 94, 0.12)) !important;
+      border-color: rgba(13, 148, 136, 0.55) !important;
+      color: #0f172a !important;
+      text-shadow: none !important;
+    }
+    body.theme-light .cyber-btn:hover, body.theme-light .cyber-btn:active {
+      background: linear-gradient(135deg, rgba(20, 184, 166, 0.35), rgba(244, 63, 94, 0.28)) !important;
+      box-shadow: 0 0 16px rgba(13, 148, 136, 0.35) !important;
+    }
+    body.theme-light .cyber-btn-active {
+      background: linear-gradient(135deg, rgba(13, 148, 136, 0.9), rgba(20, 184, 166, 0.95)) !important;
+      color: #ffffff !important;
+      border-color: #0f766e !important;
+      box-shadow: 0 0 18px rgba(13, 148, 136, 0.45) !important;
+    }
+    body.theme-light .text-slate-200, body.theme-light .text-slate-300 {
+      color: #334155 !important;
+    }
+    body.theme-light .text-slate-400 {
+      color: #64748b !important;
+    }
+    body.theme-light .touch-btn {
+      background: rgba(255, 255, 255, 0.88) !important;
+      border-color: rgba(13, 148, 136, 0.5) !important;
+      color: #0f172a !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    }
+    /* Floating 3D Text Animation */
+    @keyframes floatUpFade {
+      0% { opacity: 0; transform: translate(-50%, -20%) scale(0.65); }
+      18% { opacity: 1; transform: translate(-50%, -60%) scale(1.15); }
+      100% { opacity: 0; transform: translate(-50%, -150%) scale(1.0); }
+    }
+    .float-text-anim {
+      animation: floatUpFade 0.95s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+  
+    /* ================= LIGHT MODE OVERRIDES ================= */
+    body.theme-light {
+      background: #dbeafe !important;
+      color: #0f172a !important;
+    }
+    body.theme-light .cyber-panel {
+      background: rgba(255, 255, 255, 0.90) !important;
+      border-color: rgba(13, 148, 136, 0.5) !important;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12), inset 0 0 15px rgba(13, 148, 136, 0.06) !important;
+      color: #0f172a !important;
+    }
+    body.theme-light .cyber-btn {
+      background: linear-gradient(135deg, rgba(20, 184, 166, 0.16), rgba(244, 63, 94, 0.12)) !important;
+      border-color: rgba(13, 148, 136, 0.55) !important;
+      color: #0f172a !important;
+      text-shadow: none !important;
+    }
+    body.theme-light .cyber-btn:hover, body.theme-light .cyber-btn:active {
+      background: linear-gradient(135deg, rgba(20, 184, 166, 0.35), rgba(244, 63, 94, 0.28)) !important;
+      box-shadow: 0 0 16px rgba(13, 148, 136, 0.35) !important;
+    }
+    body.theme-light .cyber-btn-active {
+      background: linear-gradient(135deg, rgba(13, 148, 136, 0.9), rgba(20, 184, 166, 0.95)) !important;
+      color: #ffffff !important;
+      border-color: #0f766e !important;
+      box-shadow: 0 0 18px rgba(13, 148, 136, 0.45) !important;
+    }
+    body.theme-light .text-slate-200, body.theme-light .text-slate-300 {
+      color: #334155 !important;
+    }
+    body.theme-light .text-slate-400 {
+      color: #64748b !important;
+    }
+    body.theme-light .touch-btn {
+      background: rgba(255, 255, 255, 0.88) !important;
+      border-color: rgba(13, 148, 136, 0.5) !important;
+      color: #0f172a !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    }
+    /* Floating 3D Text Animation */
+    @keyframes floatUpFade {
+      0% { opacity: 0; transform: translate(-50%, -20%) scale(0.65); }
+      18% { opacity: 1; transform: translate(-50%, -60%) scale(1.15); }
+      100% { opacity: 0; transform: translate(-50%, -150%) scale(1.0); }
+    }
+    .float-text-anim {
+      animation: floatUpFade 0.95s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- 3D WebGL Canvas -->
+  <canvas id="game-canvas"></canvas>
+
+  <!-- Screen Space FX Overlays -->
+  <div id="predator-overlay"></div>
+  <div id="rampage-overlay"></div>
+  <div id="speed-lines"></div>
+  <div id="damage-flash"></div>
+  <!-- Floating Combat & Score Popups -->
+  <div id="floating-text-container" class="fixed inset-0 pointer-events-none z-20 overflow-hidden"></div>
+  <!-- Floating Combat & Score Popups -->
+  <div id="floating-text-container" class="fixed inset-0 pointer-events-none z-20 overflow-hidden"></div>
+
+  <!-- ================= IN-GAME HUD ================= -->
+  <div id="hud-layer" class="fixed inset-0 pointer-events-none z-10 hidden flex-col justify-between p-2 sm:p-4">
+    <!-- Top Row -->
+    <div class="flex flex-wrap items-start justify-between gap-2 w-full">
+      <!-- Left: Simple & Clear Health, Energy, and Growth Bars -->
+      <div class="cyber-panel rounded-xl p-2.5 sm:p-3 w-64 sm:w-72 pointer-events-auto">
+        <div class="flex items-center justify-between mb-1">
+          <span class="font-cyber text-xs sm:text-sm tracking-wider text-teal-300 font-bold" id="hud-snake-title">SNAKE LEVEL 1</span>
+          <span class="text-xs text-pink-400 font-semibold" id="hud-length-text">LENGTH: 42</span>
+        </div>
+        <!-- Health Bar -->
+        <div class="mb-1.5">
+          <div class="flex justify-between text-[11px] font-semibold text-slate-200 mb-0.5">
+            <span>HEALTH (HP)</span>
+            <span id="hud-hp-text">100 / 100</span>
+          </div>
+          <div class="w-full h-2.5 bg-slate-900/90 rounded-full overflow-hidden border border-teal-500/30">
+            <div id="hud-hp-bar" class="h-full bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-300 transition-all duration-150" style="width:100%"></div>
+          </div>
+        </div>
+        <!-- Energy / Stamina Bar -->
+        <div class="mb-1.5">
+          <div class="flex justify-between text-[11px] font-semibold text-slate-200 mb-0.5">
+            <span>ENERGY (SPRINT &amp; SQUEEZE)</span>
+            <span id="hud-stamina-text">100%</span>
+          </div>
+          <div class="w-full h-2 bg-slate-900/90 rounded-full overflow-hidden border border-amber-500/30">
+            <div id="hud-stamina-bar" class="h-full bg-gradient-to-r from-amber-400 to-yellow-300 transition-all duration-100" style="width:100%"></div>
+          </div>
+        </div>
+        <!-- Growth / Level Up Bar -->
+        <div>
+          <div class="flex justify-between text-[11px] font-semibold text-slate-200 mb-0.5">
+            <span>GROWTH (NEXT LEVEL UP)</span>
+            <span id="hud-xp-text">0 / 100</span>
+          </div>
+          <div class="w-full h-2 bg-slate-900/90 rounded-full overflow-hidden border border-fuchsia-500/30">
+            <div id="hud-xp-bar" class="h-full bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400 transition-all duration-150" style="width:0%"></div>
+          </div>
+        </div>
+        <!-- Active Upgrades Pills -->
+        <div id="hud-mutations" class="flex flex-wrap gap-1 mt-2 empty:hidden"></div>
+      </div>
+
+      <!-- Center: City Zone Goal & Boss Health Bar -->
+      <div class="flex flex-col items-center flex-1 max-w-md mx-auto order-3 sm:order-2 w-full sm:w-auto">
+        <div class="cyber-panel rounded-xl px-3.5 py-2 w-full text-center">
+          <div class="flex items-center justify-between text-xs font-cyber text-cyan-300 mb-1">
+            <span id="hud-district-name">ZONE 1: NEON DOWNTOWN</span>
+            <span id="hud-destruction-pct" class="text-pink-400 font-bold">0% / 70%</span>
+          </div>
+          <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-cyan-500/40 mb-1">
+            <div id="hud-district-bar" class="h-full bg-gradient-to-r from-cyan-400 via-fuchsia-500 to-pink-500 transition-all duration-200" style="width:0%"></div>
+          </div>
+          <div id="hud-objective-text" class="text-xs sm:text-sm font-semibold text-slate-200 tracking-wide">
+            Destroy 70% of this city zone to call out the Boss!
+          </div>
+        </div>
+
+        <!-- Boss Health Bar (Hidden until boss spawns) -->
+        <div id="hud-boss-panel" class="cyber-panel rounded-xl px-4 py-2 mt-2 w-full border-rose-500/70 hidden">
+          <div class="flex justify-between items-center text-xs font-cyber text-rose-400 font-bold mb-1">
+            <span id="hud-boss-name">⚠ MECHA-MONGOOSE</span>
+            <span id="hud-boss-phase">STAGE 1</span>
+          </div>
+          <div class="w-full h-3 bg-slate-950 rounded-full overflow-hidden border border-rose-500/60">
+            <div id="hud-boss-bar" class="h-full bg-gradient-to-r from-red-600 via-rose-500 to-amber-400 transition-all duration-100" style="width:100%"></div>
+          </div>
+        </div>
+
+        <!-- Dynamic Feed / Notification Banner -->
+        <div id="hud-toast" class="mt-2 px-4 py-1 rounded-full font-cyber text-xs sm:text-sm font-bold tracking-wider text-amber-300 bg-slate-950/85 border border-amber-400/50 opacity-0 transition-opacity duration-300">
+          FIRE RAMPAGE ON!
+        </div>
+      </div>
+
+      <!-- Right: Score, Combo, Wanted Stars & Planet Radar -->
+      <div class="flex items-start gap-2 order-2 sm:order-3 pointer-events-auto">
+        <div class="cyber-panel rounded-xl p-2.5 sm:p-3 text-right min-w-[145px]">
+          <div class="font-cyber text-lg sm:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-pink-400" id="hud-score">000,000</div>
+          <!-- Wanted Level Stars -->
+          <div class="flex items-center justify-end gap-0.5 my-1" id="hud-hunt-stars" title="Enemy Alert Level (1 to 5 Stars)">
+            <span class="text-amber-400 text-sm">★</span>
+            <span class="text-slate-600 text-sm">★</span>
+            <span class="text-slate-600 text-sm">★</span>
+            <span class="text-slate-600 text-sm">★</span>
+            <span class="text-slate-600 text-sm">★</span>
+          </div>
+          <!-- Combo & Fire Rampage Meter -->
+          <div class="flex items-center justify-between text-xs font-bold">
+            <span class="text-fuchsia-400 font-cyber" id="hud-combo-text">1.0x COMBO</span>
+            <span class="text-amber-300 text-[11px]" id="hud-rampage-label">RAMPAGE</span>
+          </div>
+          <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden mt-0.5 border border-amber-500/40">
+            <div id="hud-rampage-bar" class="h-full bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-200 transition-all duration-100" style="width:0%"></div>
+          </div>
+          <!-- Top Action Buttons -->
+          <div class="flex justify-end items-center gap-1.5 mt-2 flex-wrap">
+            <button id="btn-theme" class="cyber-btn px-2.5 py-1 rounded text-xs font-cyber font-bold tracking-wide" title="Toggle Light / Daylight Mode (Hotkey: L)">☀️ DAYLIGHT</button>
+            <button id="btn-mute" class="cyber-btn px-2.5 py-1 rounded text-xs font-cyber font-bold tracking-wide" title="Mute / Unmute Sound (Hotkey: M)">🔊 SOUND: ON</button>
+            <button id="btn-camera-steer" class="cyber-btn px-2 py-1 rounded text-xs font-cyber" title="Toggle Mouse Steering">🖱️ AUTO</button>
+            <button id="btn-fullscreen" class="cyber-btn px-2 py-1 rounded text-xs font-cyber" title="Toggle Fullscreen">⛶ FULL</button>
+            <button id="btn-pause" class="cyber-btn px-2.5 py-1 rounded text-xs font-cyber">⏸ PAUSE</button>
+          </div>
+        </div>
+
+        <!-- Circular Radar Minimap -->
+        <div class="cyber-panel rounded-full p-1.5 flex flex-col items-center">
+          <canvas id="minimap-canvas" width="96" height="96" class="rounded-full bg-slate-950 border border-teal-400/40"></canvas>
+          <span class="text-[10px] font-cyber text-teal-300 mt-0.5" id="hud-time-label">RADAR</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Row: Simple Action Buttons & Mobile Touch Controls -->
+    <div class="flex flex-col items-center w-full gap-2">
+      <!-- Squeeze Prompt Banner -->
+      <div id="hud-coil-prompt" class="hidden cyber-panel px-4 py-1.5 rounded-full text-xs sm:text-sm font-cyber text-emerald-300 border-emerald-400 animate-pulse">
+        HOLD [E] OR TAP SQUEEZE TO WRAP &amp; CRUSH THIS BUILDING!
+      </div>
+
+      <!-- Ability Hotbar (Plain English names + keys) -->
+      <div class="cyber-panel rounded-xl px-2.5 py-1.5 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 pointer-events-auto">
+        <button id="abil-boost" class="cyber-btn px-2.5 py-1 rounded-lg text-xs flex items-center gap-1.5">
+          <span class="font-cyber text-amber-300 font-bold">[SHIFT]</span>
+          <span>Sprint</span>
+        </button>
+        <button id="abil-jump" class="cyber-btn px-2.5 py-1 rounded-lg text-xs flex items-center gap-1.5">
+          <span class="font-cyber text-cyan-300 font-bold">[SPACE]</span>
+          <span>Jump</span>
+        </button>
+        <button id="abil-coil" class="cyber-btn px-2.5 py-1 rounded-lg text-xs flex items-center gap-1.5">
+          <span class="font-cyber text-emerald-300 font-bold">[E]</span>
+          <span>Squeeze Tower</span>
+        </button>
+        <button id="abil-venom" class="cyber-btn px-2.5 py-1 rounded-lg text-xs flex items-center gap-1.5">
+          <span class="font-cyber text-lime-300 font-bold">[Q]</span>
+          <span>Spit Acid</span>
+          <span id="cd-venom" class="text-[10px] text-slate-300">READY</span>
+        </button>
+        <button id="abil-roar" class="cyber-btn px-2.5 py-1 rounded-lg text-xs flex items-center gap-1.5">
+          <span class="font-cyber text-pink-400 font-bold">[F]</span>
+          <span>Tail Smash</span>
+          <span id="cd-roar" class="text-[10px] text-slate-300">READY</span>
+        </button>
+        <button id="abil-vision" class="cyber-btn px-2.5 py-1 rounded-lg text-xs flex items-center gap-1.5">
+          <span class="font-cyber text-purple-300 font-bold">[R]</span>
+          <span>Heat Vision</span>
+          <span id="cd-vision" class="text-[10px] text-slate-300">READY</span>
+        </button>
+        <button id="abil-shed" class="cyber-btn px-2.5 py-1 rounded-lg text-xs flex items-center gap-1.5">
+          <span class="font-cyber text-rose-300 font-bold">[X]</span>
+          <span>Shed Skin</span>
+          <span id="cd-shed" class="text-[10px] text-slate-300">READY</span>
+        </button>
+      </div>
+
+      <!-- Mobile / Touch Dual-Side Overlay (Joystick Left + Action Pad Right) -->
+      <div id="touch-controls" class="w-full flex items-end justify-between px-2 pb-1 pointer-events-none sm:hidden">
+        <!-- Virtual Touch Joystick -->
+        <div id="joystick-zone" class="relative w-28 h-28 rounded-full border-2 border-teal-400/50 bg-slate-950/65 pointer-events-auto flex items-center justify-center">
+          <div id="joystick-knob" class="w-12 h-12 rounded-full bg-gradient-to-br from-teal-400 to-pink-500 shadow-lg shadow-teal-500/50 transition-transform duration-75"></div>
+        </div>
+        <!-- Quick Touch Action Cluster -->
+        <div class="grid grid-cols-3 gap-1.5 pointer-events-auto">
+          <button id="touch-boost" class="touch-btn w-14 h-12 rounded-xl font-cyber text-[10px] font-bold text-amber-300">SPRINT</button>
+          <button id="touch-jump" class="touch-btn w-14 h-12 rounded-xl font-cyber text-[10px] font-bold text-cyan-300">JUMP</button>
+          <button id="touch-coil" class="touch-btn w-14 h-12 rounded-xl font-cyber text-[10px] font-bold text-emerald-300">SQUEEZE</button>
+          <button id="touch-venom" class="touch-btn w-14 h-12 rounded-xl font-cyber text-[10px] font-bold text-lime-300">ACID</button>
+          <button id="touch-roar" class="touch-btn w-14 h-12 rounded-xl font-cyber text-[10px] font-bold text-pink-400">SMASH</button>
+          <button id="touch-vision" class="touch-btn w-14 h-12 rounded-xl font-cyber text-[10px] font-bold text-purple-300">HEAT</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TITLE SCREEN MODAL ================= -->
+  <div id="title-screen" class="fixed inset-0 z-20 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md overflow-y-auto">
+    <div class="cyber-panel rounded-2xl max-w-4xl w-full p-5 sm:p-7 border border-teal-400/50 shadow-2xl my-auto">
+      <div class="text-center mb-4">
+        <div class="inline-block px-3 py-0.5 rounded-full text-xs font-cyber tracking-widest bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 mb-2">
+          3D GIANT SNAKE CITY DESTRUCTION GAME
+        </div>
+        <h1 class="font-cyber text-3xl sm:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-pink-500 title-glow">
+          ANACONDA: TITAN COIL
+        </h1>
+        <p class="font-cyber text-xs sm:text-sm text-teal-300 tracking-widest mt-1">
+          "EAT THE CITY. COIL THE SKY."
+        </p>
+      </div>
+
+      <!-- Plain-English Definition of the Snake & How It Works -->
+      <div class="cyber-panel rounded-xl p-3.5 mb-4 border border-emerald-400/40 bg-emerald-950/25">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          <div>
+            <h2 class="font-cyber text-xs sm:text-sm text-emerald-300 font-bold tracking-wider">
+              🐍 WHAT IS YOUR SNAKE? (THE GIANT GREEN ANACONDA)
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-200 mt-0.5 leading-relaxed">
+              You control a <strong class="text-emerald-300">giant, realistic Green Anaconda</strong> (<em>Eunectes murinus</em>)—the heaviest snake on Earth, famous for its olive-green scales, dark oval blotches, muscular body, and flicking forked tongue. Instead of biting with poison alone, a real anaconda <strong class="text-amber-300">wraps around its target and squeezes (constricts)</strong> until it crushes it, then <strong class="text-cyan-300">swallows food whole</strong> (leaving a visible lump moving down its stomach).
+            </p>
+          </div>
+        </div>
+      </div>
+
+            <!-- Snake Morph & Skin Customization -->
+      <div class="cyber-panel rounded-xl p-3.5 mb-4 border border-teal-400/40">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 mb-2.5">
+          <div class="flex items-center gap-2">
+            <span class="font-cyber text-xs sm:text-sm text-teal-300 font-bold tracking-wider">🧬 SELECT ANACONDA MORPH (LIVE 3D PREVIEW)</span>
+          </div>
+          <span id="skin-desc" class="text-xs text-emerald-300 font-medium">Classic Green Anaconda • Camouflaged Olive & Gold</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <button id="skin-btn-0" class="skin-btn cyber-btn-active py-2 px-2.5 rounded-lg font-cyber text-xs font-bold text-center border">
+            🐍 GREEN ANACONDA
+          </button>
+          <button id="skin-btn-1" class="skin-btn cyber-btn py-2 px-2.5 rounded-lg font-cyber text-xs font-bold text-center border">
+            ⚡ CYBER NEON
+          </button>
+          <button id="skin-btn-2" class="skin-btn cyber-btn py-2 px-2.5 rounded-lg font-cyber text-xs font-bold text-center border">
+            🌋 MAGMA DRAKE
+          </button>
+          <button id="skin-btn-3" class="skin-btn cyber-btn py-2 px-2.5 rounded-lg font-cyber text-xs font-bold text-center border">
+            👑 SOLAR OROCHI
+          </button>
+        </div>
+      </div>
+
+            <!-- Snake Morph & Skin Customization -->
+      <div class="cyber-panel rounded-xl p-3.5 mb-4 border border-teal-400/40">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 mb-2.5">
+          <div class="flex items-center gap-2">
+            <span class="font-cyber text-xs sm:text-sm text-teal-300 font-bold tracking-wider">🧬 SELECT ANACONDA MORPH (LIVE 3D PREVIEW)</span>
+          </div>
+          <span id="skin-desc" class="text-xs text-emerald-300 font-medium">Classic Green Anaconda • Camouflaged Olive & Gold</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <button id="skin-btn-0" class="skin-btn cyber-btn-active py-2 px-2.5 rounded-lg font-cyber text-xs font-bold text-center border">
+            🐍 GREEN ANACONDA
+          </button>
+          <button id="skin-btn-1" class="skin-btn cyber-btn py-2 px-2.5 rounded-lg font-cyber text-xs font-bold text-center border">
+            ⚡ CYBER NEON
+          </button>
+          <button id="skin-btn-2" class="skin-btn cyber-btn py-2 px-2.5 rounded-lg font-cyber text-xs font-bold text-center border">
+            🌋 MAGMA DRAKE
+          </button>
+          <button id="skin-btn-3" class="skin-btn cyber-btn py-2 px-2.5 rounded-lg font-cyber text-xs font-bold text-center border">
+            👑 SOLAR OROCHI
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+        <!-- Mode & Difficulty Column -->
+        <div class="cyber-panel rounded-xl p-4 flex flex-col justify-between">
+          <div>
+            <h2 class="font-cyber text-sm text-cyan-300 font-bold mb-2 tracking-wider">1. PICK GAME MODE</h2>
+            <div class="grid grid-cols-2 gap-2 mb-3">
+              <button id="mode-campaign" class="cyber-btn cyber-btn-active py-2 px-3 rounded-lg font-cyber text-xs font-bold">
+                🏙️ STORY MODE
+              </button>
+              <button id="mode-endless" class="cyber-btn py-2 px-3 rounded-lg font-cyber text-xs font-bold">
+                ♾️ ENDLESS
+              </button>
+            </div>
+            <p id="mode-desc" class="text-xs text-slate-300 mb-4">
+              <strong>Story Mode:</strong> Destroy 70% of each city zone to bring out its Boss. Beat all 4 Bosses to win!
+            </p>
+
+            <h2 class="font-cyber text-sm text-pink-400 font-bold mb-2 tracking-wider">2. PICK DIFFICULTY</h2>
+            <div class="grid grid-cols-3 gap-1.5 mb-4">
+              <button id="diff-easy" class="cyber-btn py-1.5 rounded font-cyber text-xs">EASY</button>
+              <button id="diff-normal" class="cyber-btn cyber-btn-active py-1.5 rounded font-cyber text-xs">NORMAL</button>
+              <button id="diff-hard" class="cyber-btn py-1.5 rounded font-cyber text-xs">HARD</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-cyber text-xs text-teal-300 mb-1">CITY MAP CODE (SEED)</label>
+            <div class="flex gap-1.5">
+              <input id="seed-input" type="text" value="ANACONDA-2099" class="w-full bg-slate-950/90 border border-teal-500/40 rounded px-2.5 py-1 text-xs font-cyber text-teal-200 focus:outline-none focus:border-teal-300" />
+              <button id="btn-random-seed" class="cyber-btn px-2.5 py-1 rounded text-xs font-cyber" title="New Random Map">🎲</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Simple Controls & Terms Guide Column -->
+        <div class="cyber-panel rounded-xl p-4">
+          <h2 class="font-cyber text-sm text-amber-300 font-bold mb-2 tracking-wider">EASY CONTROLS &amp; MOVES</h2>
+          <ul class="text-xs space-y-1.5 text-slate-200">
+            <li class="flex justify-between"><span class="text-teal-300 font-bold">A / D or Left / Right</span> <span>Turn Left / Right</span></li>
+            <li class="flex justify-between"><span class="text-amber-300 font-bold">SHIFT (Hold)</span> <span>Sprint Fast (Uses Energy)</span></li>
+            <li class="flex justify-between"><span class="text-cyan-300 font-bold">SPACE</span> <span>Jump / Leap Into Air</span></li>
+            <li class="flex justify-between"><span class="text-emerald-300 font-bold">E (Hold by Building)</span> <span>Wrap &amp; Squeeze Building</span></li>
+            <li class="flex justify-between"><span class="text-lime-300 font-bold">Q</span> <span>Spit Acid Ball</span></li>
+            <li class="flex justify-between"><span class="text-pink-400 font-bold">F</span> <span>Tail Smash (Hits Nearby)</span></li>
+            <li class="flex justify-between"><span class="text-purple-300 font-bold">R</span> <span>Heat Vision (Slow-Motion)</span></li>
+            <li class="flex justify-between"><span class="text-rose-300 font-bold">X</span> <span>Shed Skin (Heal + Decoy)</span></li>
+            <li class="flex justify-between"><span class="text-teal-300 font-bold">M</span> <span>Toggle Mute / Unmute Sound</span></li>
+            <li class="flex justify-between"><span class="text-amber-300 font-bold">L</span> <span>Toggle Light Mode / Daylight</span></li>
+          </ul>
+          <div class="mt-3 pt-2 border-t border-teal-500/20 text-[11px] text-slate-300">
+            💡 <strong class="text-emerald-300">How to Eat &amp; Grow:</strong> Slither into glowing people, cars, and drones to swallow them whole—your health goes up and your snake gets longer!
+          </div>
+        </div>
+
+        <!-- Local Leaderboard Column -->
+        <div class="cyber-panel rounded-xl p-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <h2 class="font-cyber text-sm text-fuchsia-400 font-bold tracking-wider">HIGH SCORES</h2>
+              <button id="btn-clear-scores" class="text-[10px] text-slate-400 hover:text-rose-400 font-cyber">RESET</button>
+            </div>
+            <div id="title-leaderboard" class="space-y-1.5 text-xs max-h-44 overflow-y-auto pr-1"></div>
+          </div>
+          <div class="mt-3 pt-2 border-t border-teal-500/20 text-[11px] text-slate-300 flex items-center justify-between">
+            <span>4 City Zones • 4 Bosses</span>
+            <span class="text-emerald-300 font-cyber">REALISTIC 3D SNAKE</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Launch & Environment Settings Row -->
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <button id="btn-start-game" class="w-full sm:w-auto px-10 py-3.5 rounded-xl font-cyber text-base sm:text-lg font-black tracking-widest bg-gradient-to-r from-emerald-400 via-teal-400 to-pink-500 text-slate-950 shadow-lg shadow-emerald-400/40 hover:scale-[1.02] transition-transform">
+          🐍 START GAME (PLAY NOW)
+        </button>
+        <button id="btn-title-theme" class="px-5 py-3.5 rounded-xl font-cyber text-xs sm:text-sm font-bold tracking-wider cyber-btn hover:scale-[1.02] transition-transform">
+          ☀️ LIGHT MODE (L)
+        </button>
+        <button id="btn-title-mute" class="px-5 py-3.5 rounded-xl font-cyber text-xs sm:text-sm font-bold tracking-wider cyber-btn hover:scale-[1.02] transition-transform">
+          🔊 SOUND: ON (M)
+        </button>
+        <button id="btn-title-fullscreen" class="px-5 py-3.5 rounded-xl font-cyber text-xs sm:text-sm font-bold tracking-wider cyber-btn hover:scale-[1.02] transition-transform">
+          ⛶ FULLSCREEN
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= LEVEL-UP UPGRADE PICKER MODAL ================= -->
+  <div id="evolution-modal" class="fixed inset-0 z-30 hidden items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md">
+    <div class="cyber-panel rounded-2xl max-w-2xl w-full p-6 border-2 border-fuchsia-500/70 text-center">
+      <div class="text-xs font-cyber tracking-widest text-fuchsia-400 mb-1">YOUR SNAKE GREW BIGGER!</div>
+      <h2 class="font-cyber text-2xl sm:text-3xl font-black text-white mb-1">CHOOSE A SNAKE UPGRADE</h2>
+      <p class="text-xs sm:text-sm text-slate-300 mb-5">Pick 1 power-up to make your Anaconda stronger (Press Key 1, 2, or 3):</p>
+      <div id="mutation-choices" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+    </div>
+  </div>
+
+  <!-- ================= PAUSE MODAL ================= -->
+  <div id="pause-modal" class="fixed inset-0 z-30 hidden items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md">
+    <div class="cyber-panel rounded-2xl max-w-md w-full p-6 text-center">
+      <h2 class="font-cyber text-2xl font-black text-teal-300 mb-2">GAME PAUSED</h2>
+      <p class="text-xs text-slate-300 mb-5">Take a breather or jump right back into the city.</p>
+      <div class="space-y-2.5">
+        <button id="btn-resume" class="cyber-btn w-full py-2.5 rounded-xl font-cyber text-sm font-bold">▶ RESUME GAME</button>
+        <button id="btn-pause-mute" class="cyber-btn w-full py-2.5 rounded-xl font-cyber text-sm font-bold text-amber-300">🔊 SOUND: ON (M)</button>
+        <button id="btn-pause-theme" class="cyber-btn w-full py-2.5 rounded-xl font-cyber text-sm font-bold text-cyan-300">☀️ TOGGLE LIGHT MODE (L)</button>
+        <button id="btn-pause-fullscreen" class="cyber-btn w-full py-2.5 rounded-xl font-cyber text-sm font-bold text-teal-300">⛶ TOGGLE FULLSCREEN</button>
+        <button id="btn-restart" class="cyber-btn w-full py-2.5 rounded-xl font-cyber text-sm font-bold">🔄 RESTART</button>
+        <button id="btn-main-menu" class="cyber-btn w-full py-2.5 rounded-xl font-cyber text-sm font-bold text-rose-300">🏠 MAIN MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= GAME OVER / VICTORY STATS MODAL ================= -->
+  <div id="gameover-modal" class="fixed inset-0 z-30 hidden items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto">
+    <div class="cyber-panel rounded-2xl max-w-lg w-full p-6 text-center border-2 border-pink-500/60 my-auto">
+      <div id="gameover-badge" class="inline-block px-3 py-0.5 rounded-full text-xs font-cyber bg-rose-500/20 text-rose-300 border border-rose-400/40 mb-2">
+        OUT OF HEALTH
+      </div>
+      <h2 id="gameover-title" class="font-cyber text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-pink-300 to-teal-300 mb-4">
+        GAME OVER
+      </h2>
+
+      <!-- Run Stats Grid -->
+      <div class="grid grid-cols-2 gap-2.5 text-left mb-5">
+        <div class="bg-slate-900/80 p-2.5 rounded-lg border border-teal-500/30">
+          <div class="text-[10px] font-cyber text-slate-400">FINAL SCORE</div>
+          <div id="stat-score" class="font-cyber text-lg font-bold text-teal-300">0</div>
+        </div>
+        <div class="bg-slate-900/80 p-2.5 rounded-lg border border-pink-500/30">
+          <div class="text-[10px] font-cyber text-slate-400">SNAKE SIZE &amp; LEVEL</div>
+          <div id="stat-length" class="font-cyber text-lg font-bold text-pink-400">Length 42 (Lv.1)</div>
+        </div>
+        <div class="bg-slate-900/80 p-2.5 rounded-lg border border-amber-500/30">
+          <div class="text-[10px] font-cyber text-slate-400">BUILDINGS CRUSHED</div>
+          <div id="stat-buildings" class="font-cyber text-lg font-bold text-amber-300">0</div>
+        </div>
+        <div class="bg-slate-900/80 p-2.5 rounded-lg border border-cyan-500/30">
+          <div class="text-[10px] font-cyber text-slate-400">PREY &amp; CARS EATEN</div>
+          <div id="stat-eaten" class="font-cyber text-lg font-bold text-cyan-300">0</div>
+        </div>
+        <div class="bg-slate-900/80 p-2.5 rounded-lg border border-purple-500/30">
+          <div class="text-[10px] font-cyber text-slate-400">BOSSES DEFEATED</div>
+          <div id="stat-bosses" class="font-cyber text-lg font-bold text-purple-300">0</div>
+        </div>
+        <div class="bg-slate-900/80 p-2.5 rounded-lg border border-emerald-500/30">
+          <div class="text-[10px] font-cyber text-slate-400">BEST COMBO</div>
+          <div id="stat-combo" class="font-cyber text-lg font-bold text-emerald-300">1.0x</div>
+        </div>
+      </div>
+
+      <!-- Save Score Entry -->
+      <div id="score-submit-box" class="mb-5 bg-slate-900/90 p-3 rounded-xl border border-teal-400/40">
+        <label class="block text-xs font-cyber text-teal-300 mb-1.5">ENTER YOUR NAME FOR HIGH SCORES</label>
+        <div class="flex gap-2">
+          <input id="player-name-input" type="text" maxlength="14" value="ANACONDA" placeholder="YOUR NAME" class="flex-1 bg-slate-950 border border-teal-500/50 rounded-lg px-3 py-1.5 text-sm font-cyber text-white focus:outline-none" />
+          <button id="btn-save-score" class="cyber-btn px-4 py-1.5 rounded-lg font-cyber text-xs font-bold">SAVE</button>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <button id="btn-play-again" class="cyber-btn flex-1 py-3 rounded-xl font-cyber text-sm font-bold">🐍 PLAY AGAIN</button>
+        <button id="btn-gameover-menu" class="cyber-btn flex-1 py-3 rounded-xl font-cyber text-sm font-bold">🏠 MAIN MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ============================================================================
+     * 1. CONFIGURATION & CONSTANTS (WITH SIMPLE, CLEAR LABELS)
+     * ============================================================================ */
+    const CONFIG = {
+      PLANET_RADIUS: 92,
+      FIXED_DT: 1 / 60,
+      INITIAL_SEGMENTS: 42,
+      MAX_SEGMENTS: 130,
+      SEGMENT_SPACING: 1.05,
+      BASE_SPEED: 22,
+      BOOST_SPEED: 39,
+      TURN_RATE: 2.65,
+      JUMP_IMPULSE: 27,
+      GRAVITY: 46,
+      DISTRICTS: [
+        { id: 0, name: 'NEON DOWNTOWN', color: 0x00ffcc, accent: '#00ffcc', bossName: 'MECHA-MONGOOSE', bossType: 'mongoose' },
+        { id: 1, name: 'INDUSTRIAL DOCKS', color: 0xffaa00, accent: '#ffaa00', bossName: 'GIANT TANK WALKER', bossType: 'walker' },
+        { id: 2, name: 'GLASS SUBURBS', color: 0xff00aa, accent: '#ff00aa', bossName: 'SKY FORTRESS', bossType: 'carrier' },
+        { id: 3, name: 'MILITARY BASE', color: 0xff2244, accent: '#ff2244', bossName: 'ROBO-COBRA BOSS', bossType: 'cobra' }
+      ],
+      MUTATIONS: [
+        { id: 'electric', name: 'Shock Scales', icon: '⚡', desc: 'Automatically zaps nearby enemy drones and tanks with lightning.' },
+        { id: 'armor', name: 'Thick Scales', icon: '🛡️', desc: 'You take 35% less damage from enemies and gain +30 Max Health.' },
+        { id: 'acid', name: 'Triple Acid Spit', icon: '🧪', desc: 'Your [Q] Acid Spit shoots 3 stronger balls at once instead of 1.' },
+        { id: 'regen', name: 'Fast Healing', icon: '💚', desc: 'Slowly refills your Health bar automatically every second.' },
+        { id: 'glide', name: 'Cobra Wings (Glide)', icon: '🦇', desc: 'Spreads side ribs when jumping so you jump higher and float in the air.' },
+        { id: 'magnet', name: 'Food Magnet', icon: '🧲', desc: 'Automatically pulls nearby people, cars, and drones into your mouth.' }
+      ],
+      DIFFICULTY: {
+        easy:   { dmgMult: 0.65, scoreMult: 0.9, enemyRate: 0.8 },
+        normal: { dmgMult: 1.0,  scoreMult: 1.0, enemyRate: 1.0 },
+        hard:   { dmgMult: 1.45, scoreMult: 1.35, enemyRate: 1.25 }
+      }
+    };
+
+    /* ============================================================================
+     * 2. SEEDED RNG (MULBERRY32)
+     * ============================================================================ */
+    class SeededRNG {
+      constructor(seedStr = 'ANACONDA-2099') {
+        let h = 1779033703 ^ seedStr.length;
+        for (let i = 0; i < seedStr.length; i++) {
+          h = Math.imul(h ^ seedStr.charCodeAt(i), 3432918353);
+          h = (h << 13) | (h >>> 19);
+        }
+        this.state = (h >>> 0) || 123456789;
+      }
+      next() {
+        let t = (this.state += 0x6D2B79F5);
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      }
+      range(min, max) { return min + this.next() * (max - min); }
+      int(min, max) { return Math.floor(this.range(min, max + 1)); }
+      pick(arr) { return arr[Math.floor(this.next() * arr.length)]; }
+    }
+
+    /* ============================================================================
+     * 3. WEB AUDIO API PROCEDURAL SYNTHESIZER (MUSIC + SFX)
+     * ============================================================================ */
+    class CyberAudio {
+      constructor() {
+        this.ctx = null;
+        this.masterGain = null;
+        this.muted = (localStorage.getItem('anaconda_muted') === 'true');
+        this.step = 0;
+        this.musicTimer = null;
+        this.huntLevel = 1;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) {
+            this.ctx = new AudioCtx();
+            this.masterGain = this.ctx.createGain();
+            this.masterGain.gain.setValueAtTime(this.muted ? 0.0 : 0.85, this.ctx.currentTime);
+            this.masterGain.connect(this.ctx.destination);
+          }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+        this.startMusicLoop();
+      }
+
+      toggleMute() {
+        this.muted = !this.muted;
+        localStorage.setItem('anaconda_muted', this.muted ? 'true' : 'false');
+        if (this.ctx && this.masterGain) {
+          this.masterGain.gain.setValueAtTime(this.muted ? 0.0 : 0.85, this.ctx.currentTime);
+        }
+        updateMuteUI();
+        showToast(this.muted ? '🔇 AUDIO MUTED' : '🔊 AUDIO UNMUTED');
+        return this.muted;
+      }
+
+      startMusicLoop() {
+        if (this.musicTimer) clearInterval(this.musicTimer);
+        const bassNotes = [55, 55, 65.41, 55, 73.42, 65.41, 82.41, 49];
+        const arpNotes  = [220, 261.63, 329.63, 392, 440, 392, 329.63, 261.63];
+
+        this.musicTimer = setInterval(() => {
+          if (this.muted || !this.ctx || state.status !== 'playing') return;
+          const now = this.ctx.currentTime;
+          const s = this.step % 8;
+
+          // Driving Synthwave Bassline
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const filter = this.ctx.createBiquadFilter();
+          osc.type = 'sawtooth';
+          const freq = bassNotes[s] * (state.rampageTime > 0 ? 1.25 : 1);
+          osc.frequency.setValueAtTime(freq, now);
+
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(240 + this.huntLevel * 110, now);
+          filter.frequency.exponentialRampToValueAtTime(80, now + 0.16);
+
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
+
+          osc.connect(filter);
+          filter.connect(gain);
+          gain.connect(this.masterGain || this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.18);
+
+          // Kick on 0 & 4
+          if (s % 2 === 0) {
+            const kOsc = this.ctx.createOscillator();
+            const kGain = this.ctx.createGain();
+            kOsc.frequency.setValueAtTime(125, now);
+            kOsc.frequency.exponentialRampToValueAtTime(32, now + 0.12);
+            kGain.gain.setValueAtTime(0.14, now);
+            kGain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+            kOsc.connect(kGain);
+            kGain.connect(this.ctx.destination);
+            kOsc.start(now);
+            kOsc.stop(now + 0.14);
+          }
+
+          // High Alert Level Synth Arp
+          if (this.huntLevel >= 2 || state.boss) {
+            const aOsc = this.ctx.createOscillator();
+            const aGain = this.ctx.createGain();
+            aOsc.type = 'triangle';
+            aOsc.frequency.setValueAtTime(arpNotes[(this.step * 2) % 8] * (state.boss ? 1.5 : 1), now);
+            aGain.gain.setValueAtTime(0.035, now);
+            aGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            aOsc.connect(aGain);
+            aGain.connect(this.ctx.destination);
+            aOsc.start(now);
+            aOsc.stop(now + 0.11);
+          }
+
+          this.step++;
+        }, 185);
+      }
+
+      playSfx(type) {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+
+        if (type === 'swallow') {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(160, now);
+          osc.frequency.exponentialRampToValueAtTime(420, now + 0.09);
+          osc.frequency.exponentialRampToValueAtTime(190, now + 0.18);
+          gain.gain.setValueAtTime(0.14, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.19);
+          osc.connect(gain); gain.connect(this.masterGain || this.ctx.destination);
+          osc.start(now); osc.stop(now + 0.2);
+        } else if (type === 'crunch' || type === 'explosion') {
+          const dur = type === 'explosion' ? 0.45 : 0.22;
+          const bufSize = Math.floor(this.ctx.sampleRate * dur);
+          const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+          const data = buf.getChannelData(0);
+          for (let i = 0; i < bufSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufSize * 0.35));
+          }
+          const noise = this.ctx.createBufferSource();
+          noise.buffer = buf;
+          const filter = this.ctx.createBiquadFilter();
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(type === 'explosion' ? 520 : 950, now);
+          const gain = this.ctx.createGain();
+          gain.gain.setValueAtTime(type === 'explosion' ? 0.24 : 0.16, now);
+          gain.gain.exponentialRampToValueAtTime(0.005, now + dur);
+          noise.connect(filter); filter.connect(gain); gain.connect(this.masterGain || this.ctx.destination);
+          noise.start(now);
+        } else if (type === 'hiss' || type === 'venom') {
+          const dur = 0.2;
+          const bufSize = Math.floor(this.ctx.sampleRate * dur);
+          const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+          const data = buf.getChannelData(0);
+          for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufSize);
+          const noise = this.ctx.createBufferSource();
+          noise.buffer = buf;
+          const filter = this.ctx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(2400, now);
+          const gain = this.ctx.createGain();
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.005, now + dur);
+          noise.connect(filter); filter.connect(gain); gain.connect(this.masterGain || this.ctx.destination);
+          noise.start(now);
+        } else if (type === 'roar') {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(140, now);
+          osc.frequency.exponentialRampToValueAtTime(42, now + 0.55);
+          gain.gain.setValueAtTime(0.24, now);
+          gain.gain.exponentialRampToValueAtTime(0.005, now + 0.58);
+          osc.connect(gain); gain.connect(this.masterGain || this.ctx.destination);
+          osc.start(now); osc.stop(now + 0.6);
+        } else if (type === 'levelup') {
+          [261.63, 329.63, 392.0, 523.25].forEach((f, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(f, now + idx * 0.06);
+            gain.gain.setValueAtTime(0.12, now + idx * 0.06);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.22);
+            osc.connect(gain); gain.connect(this.masterGain || this.ctx.destination);
+            osc.start(now + idx * 0.06); osc.stop(now + idx * 0.06 + 0.24);
+          });
+        }
+      }
+    }
+
+    const audio = new CyberAudio();
+
+    
+    /* ============================================================================
+     * THEME (LIGHT/DARK), MUTE, SKIN & 3D FLOATING TEXT ENGINES
+     * ============================================================================ */
+    const SKIN_INFO = [
+      { name: 'GREEN ANACONDA', desc: 'Classic Green Anaconda • Camouflaged Olive & Gold', eyeColor: 0xffaa00 },
+      { name: 'CYBER NEON', desc: 'Bioluminescent Neon Viper • Electric Cyan & Hot Pink', eyeColor: 0x00ffff },
+      { name: 'MAGMA DRAKE', desc: 'Volcanic Drake • Basalt Scales with Molten Lava Fissures', eyeColor: 0xff3300 },
+      { name: 'SOLAR OROCHI', desc: 'Celestial Orochi • Shimmering White & 24k Gold Diamonds', eyeColor: 0xff1144 }
+    ];
+
+    function applySkin(idx) {
+      state.skin = idx;
+      localStorage.setItem('anaconda_skin', idx.toString());
+      snakeShaderUniforms.uSkin.value = idx;
+      const info = SKIN_INFO[idx] || SKIN_INFO[0];
+      const descEl = document.getElementById('skin-desc');
+      if (descEl) descEl.textContent = info.desc;
+
+      // Update eye colors on snake
+      if (typeof snake !== 'undefined' && snake && snake.head) {
+        snake.head.traverse((child) => {
+          if (child.isMesh && child.geometry && child.geometry.type === 'SphereGeometry' && child !== snake.head) {
+            if (child.material && child.material.color) child.material.color.setHex(info.eyeColor);
+          }
+        });
+      }
+
+      for (let i = 0; i < 4; i++) {
+        const btn = document.getElementById(`skin-btn-${i}`);
+        if (btn) {
+          if (i === idx) {
+            btn.className = 'skin-btn cyber-btn-active py-2 px-2.5 rounded-lg font-cyber text-xs font-bold text-center border';
+          } else {
+            btn.className = 'skin-btn cyber-btn py-2 px-2.5 rounded-lg font-cyber text-xs font-bold text-center border';
+          }
+        }
+      }
+    }
+
+    function applyTheme(t) {
+      state.theme = t;
+      localStorage.setItem('anaconda_theme', t);
+      const isLight = (t === 'light');
+      document.body.classList.toggle('theme-light', isLight);
+
+      if (typeof renderer !== 'undefined' && renderer) {
+        if (isLight) {
+          renderer.setClearColor(0xdbeafe, 1.0);
+          if (typeof scene !== 'undefined' && scene.fog) {
+            scene.fog.color.setHex(0xdbeafe);
+            scene.fog.density = 0.0022;
+          }
+          if (typeof ambientLight !== 'undefined' && ambientLight) {
+            ambientLight.color.setHex(0xfef08a);
+            ambientLight.intensity = 1.45;
+          }
+          if (typeof dirLight !== 'undefined' && dirLight) {
+            dirLight.color.setHex(0xffffff);
+            dirLight.intensity = 1.95;
+          }
+          if (typeof rimLight !== 'undefined' && rimLight) {
+            rimLight.color.setHex(0x38bdf8);
+            rimLight.intensity = 0.85;
+          }
+          if (typeof starMat !== 'undefined' && starMat) starMat.opacity = 0.0;
+          if (typeof auroraMesh !== 'undefined' && auroraMesh) auroraMesh.visible = false;
+          if (typeof moonMesh !== 'undefined' && moonMesh) moonMesh.material.color.setHex(0xfff59d); // Radiant Sun
+          if (typeof moonHalo !== 'undefined' && moonHalo) { moonHalo.material.color.setHex(0xfbbf24); moonHalo.material.opacity = 0.55; }
+          if (typeof planetMesh !== 'undefined' && planetMesh) planetMesh.material.color.setHex(0x334155);
+        } else {
+          renderer.setClearColor(0x060411, 1.0);
+          if (typeof scene !== 'undefined' && scene.fog) {
+            scene.fog.color.setHex(0x090418);
+            scene.fog.density = 0.0032;
+          }
+          if (typeof ambientLight !== 'undefined' && ambientLight) {
+            ambientLight.color.setHex(0x64748b);
+            ambientLight.intensity = 1.05;
+          }
+          if (typeof dirLight !== 'undefined' && dirLight) {
+            dirLight.color.setHex(0xfffbeb);
+            dirLight.intensity = 1.35;
+          }
+          if (typeof rimLight !== 'undefined' && rimLight) {
+            rimLight.color.setHex(0x00ffcc);
+            rimLight.intensity = 0.75;
+          }
+          if (typeof starMat !== 'undefined' && starMat) starMat.opacity = 0.85;
+          if (typeof auroraMesh !== 'undefined' && auroraMesh) auroraMesh.visible = true;
+          if (typeof moonMesh !== 'undefined' && moonMesh) moonMesh.material.color.setHex(0xff2a85); // Cyberpunk Moon
+          if (typeof moonHalo !== 'undefined' && moonHalo) { moonHalo.material.color.setHex(0x00ffcc); moonHalo.material.opacity = 0.35; }
+          if (typeof planetMesh !== 'undefined' && planetMesh) planetMesh.material.color.setHex(0x0c0920);
+        }
+      }
+      updateThemeUI();
+    }
+
+    function toggleTheme() {
+      applyTheme(state.theme === 'light' ? 'dark' : 'light');
+      showToast(state.theme === 'light' ? '☀️ DAYLIGHT MODE ACTIVE' : '🌙 CYBER NIGHT ACTIVE');
+    }
+
+    function updateThemeUI() {
+      const isLight = (state.theme === 'light');
+      const text = isLight ? '🌙 NIGHT' : '☀️ LIGHT';
+      const b1 = document.getElementById('btn-theme');
+      const b2 = document.getElementById('btn-title-theme');
+      const b3 = document.getElementById('btn-pause-theme');
+      if (b1) b1.textContent = text;
+      if (b2) b2.textContent = (isLight ? '🌙 NIGHT MODE (L)' : '☀️ LIGHT MODE (L)');
+      if (b3) b3.textContent = (isLight ? '🌙 NIGHT MODE (L)' : '☀️ LIGHT MODE (L)');
+    }
+
+    function updateMuteUI() {
+      const m = audio.muted;
+      const text = m ? '🔇 MUTED' : '🔊 SOUND: ON';
+      const b1 = document.getElementById('btn-mute');
+      const b2 = document.getElementById('btn-title-mute');
+      const b3 = document.getElementById('btn-pause-mute');
+      if (b1) {
+        b1.textContent = text;
+        b1.classList.toggle('text-rose-400', m);
+      }
+      if (b2) {
+        b2.textContent = text + ' (M)';
+        b2.classList.toggle('text-rose-400', m);
+      }
+      if (b3) {
+        b3.textContent = text + ' (M)';
+        b3.classList.toggle('text-rose-400', m);
+      }
+    }
+
+    function spawnFloatingText(worldPos, text, colorStyle = '#00ffcc', size = '16px') {
+      if (!worldPos) return;
+      const container = document.getElementById('floating-text-container');
+      if (!container) return;
+      const p = worldPos.clone().project(camera);
+      if (p.z > 1.0) return;
+      const x = (p.x * 0.5 + 0.5) * window.innerWidth;
+      const y = (-p.y * 0.5 + 0.5) * window.innerHeight;
+
+      const el = document.createElement('div');
+      el.className = 'absolute font-cyber font-black tracking-wider pointer-events-none float-text-anim';
+      el.style.left = `${Math.round(x)}px`;
+      el.style.top = `${Math.round(y)}px`;
+      el.style.fontSize = size;
+      el.style.color = colorStyle;
+      el.style.textShadow = `0 0 10px ${colorStyle}, 0 2px 4px rgba(0,0,0,0.85)`;
+      el.textContent = text;
+      container.appendChild(el);
+
+      setTimeout(() => {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      }, 960);
+    }
+
+/* ============================================================================
+     * 4. GLOBAL GAME STATE & INPUTS
+     * ============================================================================ */
+    const state = {
+      status: 'menu', // 'menu' | 'playing' | 'paused' | 'evolving' | 'gameover'
+      mode: 'campaign', // 'campaign' | 'endless'
+      difficulty: 'normal',
+      seed: 'ANACONDA-2099',
+      score: 0,
+      combo: 1.0,
+      comboTimer: 0,
+      maxCombo: 1.0,
+      rampageMeter: 0,
+      rampageTime: 0,
+      predatorTime: 0,
+      slowMoFactor: 1.0,
+      slowMoTimer: 0,
+      huntLevel: 1,
+      theme: localStorage.getItem('anaconda_theme') || 'dark',
+      skin: parseInt(localStorage.getItem('anaconda_skin') || '0', 10),
+      streakCount: 0,
+      currentDistrict: 0,
+      districtDestroyed: [0, 0, 0, 0],
+      districtTotals: [1, 1, 1, 1],
+      buildingsCrushed: 0,
+      unitsEaten: 0,
+      bossesSlain: 0,
+      dayTime: 0.15,
+      cameraShake: 0,
+      mouseSteerEnabled: false,
+      mouseX: 0,
+      cooldowns: { venom: 0, roar: 0, vision: 0, shed: 0 },
+      mutations: {},
+      boss: null,
+      decoy: null
+    };
+
+    const keys = {
+      w: false, a: false, s: false, d: false,
+      up: false, down: false, left: false, right: false,
+      shift: false, space: false, e: false
+    };
+    const joyInput = { x: 0, y: 0, active: false };
+
+    /* ============================================================================
+     * 5. THREE.JS SCENE, CAMERA & REALISTIC ANACONDA SCALE SHADER
+     * ============================================================================ */
+    const canvas = document.getElementById('game-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x090418, 0.0032);
+
+    const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 950);
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0x64748b, 1.05);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xfffbeb, 1.35);
+    dirLight.position.set(180, 240, 150);
+    scene.add(dirLight);
+
+    const rimLight = new THREE.DirectionalLight(0x00ffcc, 0.75);
+    rimLight.position.set(-190, -140, -120);
+    scene.add(rimLight);
+
+    /*
+     * Realistic Green Anaconda (Eunectes murinus) Skin & Scale Shader:
+     * - Olive-emerald dorsal skin with interlocking diamond/hexagonal keratin scales
+     * - Dark chocolate/black oval saddle blotches with golden-ochre rings along the back
+     * - Pale cream/yellow-green ventral belly scutes underneath with subtle bio-luminescent veins
+     * - Wet specular sheen so the muscles glisten under city & sun lights
+     */
+    const snakeShaderUniforms = {
+      uTime: { value: 0 },
+      uRampage: { value: 0 },
+      uPredator: { value: 0 },
+      uSkin: { value: parseInt(localStorage.getItem('anaconda_skin') || '0', 10) }
+    };
+
+    const snakeMaterial = new THREE.ShaderMaterial({
+      uniforms: snakeShaderUniforms,
+      vertexShader: `
+        varying vec3 vNormal;
+        varying vec3 vLocalNormal;
+        varying vec2 vUv;
+        varying vec3 vViewDir;
+        void main() {
+          vUv = uv;
+          vLocalNormal = normal;
+          vNormal = normalize(normalMatrix * normal);
+          vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+          vViewDir = normalize(-mvPos.xyz);
+          gl_Position = projectionMatrix * mvPos;
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        uniform float uRampage;
+        uniform float uPredator;
+        uniform float uSkin;
+        varying vec3 vNormal;
+        varying vec3 vLocalNormal;
+        varying vec2 vUv;
+        varying vec3 vViewDir;
+
+        void main() {
+          // 1. Overlapping diamond snake scales
+          vec2 scaleUv = vUv * vec2(26.0, 14.0);
+          scaleUv.x += mod(floor(scaleUv.y), 2.0) * 0.5;
+          vec2 cell = fract(scaleUv) - 0.5;
+          float diamond = abs(cell.x) + abs(cell.y);
+          float scaleShape = smoothstep(0.54, 0.36, diamond);
+          float scaleRidge = smoothstep(0.50, 0.12, diamond);
+
+          // 2. Authentic blotch pattern
+          vec2 blotchUv = vUv * vec2(7.0, 3.5);
+          vec2 bCell = fract(blotchUv) - 0.5;
+          float spotDist = length(bCell * vec2(1.15, 1.55));
+          float darkSpot = smoothstep(0.36, 0.24, spotDist);
+          float goldRim  = smoothstep(0.43, 0.33, spotDist) - darkSpot;
+
+          vec3 dorsalCol = vec3(0.17, 0.36, 0.14) * (0.75 + 0.35 * scaleRidge);
+          vec3 bellyCol  = vec3(0.76, 0.74, 0.44);
+
+          // Multi-Morph Skin Logic:
+          if (uSkin < 0.5) {
+            // Skin 0: Authentic Green Anaconda (Eunectes murinus)
+            vec3 oliveSkin = vec3(0.17, 0.36, 0.14) * (0.75 + 0.35 * scaleRidge);
+            vec3 darkSaddle = vec3(0.05, 0.07, 0.04);
+            vec3 rimOchre = vec3(0.58, 0.52, 0.16);
+            dorsalCol = mix(oliveSkin, rimOchre, clamp(goldRim, 0.0, 1.0));
+            dorsalCol = mix(dorsalCol, darkSaddle, darkSpot * 0.92);
+            float bioCrevice = (1.0 - scaleShape) * (0.4 + 0.6 * sin(uTime * 3.5 + vUv.x * 12.0));
+            dorsalCol += vec3(0.0, 0.45, 0.32) * bioCrevice * 0.28;
+            bellyCol = vec3(0.76, 0.74, 0.44);
+          } else if (uSkin < 1.5) {
+            // Skin 1: Cyber Neon Viper (Carbon black + pulsing cyan & hot-magenta hexes)
+            vec3 carbon = vec3(0.06, 0.06, 0.09) * (0.8 + 0.35 * scaleRidge);
+            vec3 neonCyan = vec3(0.0, 1.0, 0.88);
+            vec3 neonPink = vec3(1.0, 0.05, 0.65);
+            float wave = 0.5 + 0.5 * sin(uTime * 4.0 - vUv.x * 20.0);
+            vec3 neon = mix(neonCyan, neonPink, wave);
+            float crevice = (1.0 - scaleShape) * 1.5 + darkSpot * 0.45;
+            dorsalCol = carbon + neon * clamp(crevice, 0.0, 1.4);
+            bellyCol = mix(vec3(0.04, 0.04, 0.08), neonCyan, 0.35);
+          } else if (uSkin < 2.5) {
+            // Skin 2: Magma Drake (Volcanic basalt + molten crack fissures)
+            vec3 basalt = vec3(0.09, 0.08, 0.08) * (0.85 + 0.3 * scaleRidge);
+            float lavaWave = 0.55 + 0.45 * sin(uTime * 5.0 + vUv.x * 16.0);
+            vec3 lava = mix(vec3(1.0, 0.25, 0.0), vec3(1.0, 0.85, 0.1), lavaWave);
+            float fissure = (1.0 - scaleShape) * 1.6 + darkSpot * 0.8;
+            dorsalCol = mix(basalt, lava, clamp(fissure * 0.85, 0.0, 1.0));
+            bellyCol = vec3(0.85, 0.25, 0.06);
+          } else {
+            // Skin 3: Solar Orochi (Ivory pearl + glistening 24k gold diamond patterns)
+            vec3 pearl = vec3(0.92, 0.94, 0.96) * (0.88 + 0.22 * scaleRidge);
+            vec3 gold = vec3(0.96, 0.79, 0.22) * (1.1 + 0.25 * sin(uTime * 2.2 + vUv.x * 8.0));
+            dorsalCol = mix(pearl, gold, clamp(darkSpot * 0.95 + goldRim * 0.85, 0.0, 1.0));
+            bellyCol = vec3(0.96, 0.92, 0.82);
+          }
+
+          // 3. Ventral belly scutes
+          float isBelly = smoothstep(-0.15, -0.58, vLocalNormal.y);
+          float scuteRib = smoothstep(0.15, 0.35, abs(sin(vUv.x * 45.0)));
+          vec3 bellyFinal = bellyCol * (0.85 + 0.15 * scuteRib);
+          vec3 skinCol = mix(dorsalCol, bellyFinal, isBelly);
+
+          // 4. Lighting & Specular wet sheen
+          vec3 lightDir = normalize(vec3(0.5, 0.8, 0.4));
+          float diff = max(dot(vNormal, lightDir), 0.0);
+          vec3 halfVec = normalize(lightDir + vViewDir);
+          float spec = pow(max(dot(vNormal, halfVec), 0.0), 30.0) * scaleShape;
+          float fresnel = pow(1.0 - max(dot(vNormal, vViewDir), 0.0), 3.0);
+
+          vec3 finalCol = skinCol * (0.44 + 0.76 * diff) + vec3(0.9, 0.98, 0.95) * spec * 0.5 + vec3(0.2, 0.8, 0.7) * fresnel * 0.25;
+
+          // 5. Fire Rampage Mode
+          if (uRampage > 0.01) {
+            vec3 fireCol = mix(vec3(1.0, 0.22, 0.0), vec3(1.0, 0.92, 0.15), scaleShape);
+            finalCol = mix(finalCol, fireCol, uRampage * 0.8);
+          }
+
+          // 6. Heat Vision Mode
+          if (uPredator > 0.01) {
+            finalCol = mix(finalCol, vec3(0.0, 1.0, 0.9), uPredator * 0.55);
+          }
+
+          gl_FragColor = vec4(finalCol, 1.0);
+        }
+      `
+    });
+
+    /* ============================================================================
+     * 6. CELESTIAL SKY, GIANT MOON, STARS & AURORA RIBBONS
+     * ============================================================================ */
+    const skyGroup = new THREE.Group();
+    scene.add(skyGroup);
+
+    // Starfield
+    const starGeo = new THREE.BufferGeometry();
+    const starPos = new Float32Array(1200 * 3);
+    for (let i = 0; i < 1200; i++) {
+      const u = Math.random();
+      const v = Math.random();
+      const theta = u * 2.0 * Math.PI;
+      const phi = Math.acos(2.0 * v - 1.0);
+      const r = 420 + Math.random() * 180;
+      starPos[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
+      starPos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      starPos[i * 3 + 2] = r * Math.cos(phi);
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+    const starMat = new THREE.PointsMaterial({ color: 0xa5f3fc, size: 1.9, transparent: true, opacity: 0.85 });
+    const starField = new THREE.Points(starGeo, starMat);
+    skyGroup.add(starField);
+
+    // Giant Cyberpunk Moon
+    const moonMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(48, 32, 32),
+      new THREE.MeshBasicMaterial({ color: 0xff2a85 })
+    );
+    moonMesh.position.set(240, 210, -290);
+    skyGroup.add(moonMesh);
+
+    const moonHalo = new THREE.Mesh(
+      new THREE.RingGeometry(52, 74, 48),
+      new THREE.MeshBasicMaterial({ color: 0x00ffcc, side: THREE.DoubleSide, transparent: true, opacity: 0.35 })
+    );
+    moonHalo.position.copy(moonMesh.position);
+    moonHalo.lookAt(0, 0, 0);
+    skyGroup.add(moonHalo);
+
+    // Aurora Borealis Ring
+    const auroraMesh = new THREE.Mesh(
+      new THREE.TorusGeometry(195, 12, 16, 80),
+      new THREE.MeshBasicMaterial({ color: 0x00ffaa, wireframe: true, transparent: true, opacity: 0.22 })
+    );
+    auroraMesh.rotation.x = Math.PI * 0.35;
+    skyGroup.add(auroraMesh);
+
+    /* ============================================================================
+     * 7. PLANET & PROCEDURAL 4-ZONE CITY GENERATION
+     * ============================================================================ */
+    const worldGroup = new THREE.Group();
+    scene.add(worldGroup);
+
+    let planetMesh = null;
+    let lakeMesh = null;
+    let buildingInstMesh = null;
+    let buildingRoofInstMesh = null;
+    let buildings = [];
+    let bridges = [];
+    let preys = [];
+    let enemies = [];
+    let projectiles = [];
+    let particles = [];
+
+    const dummyObj = new THREE.Object3D();
+    const tempVecA = new THREE.Vector3();
+    const tempVecB = new THREE.Vector3();
+    const upAxis = new THREE.Vector3(0, 1, 0);
+
+    function getDistrictAt(pos) {
+      const x = pos.x >= 0 ? 1 : 0;
+      const z = pos.z >= 0 ? 1 : 0;
+      if (x === 1 && z === 1) return 0; // Neon Downtown
+      if (x === 0 && z === 1) return 1; // Industrial Docks
+      if (x === 0 && z === 0) return 2; // Glass Suburbs
+      return 3;                         // Military Base
+    }
+
+    function createBuildingTexture() {
+      const c = document.createElement('canvas');
+      c.width = 128; c.height = 256;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#090718';
+      ctx.fillRect(0, 0, 128, 256);
+      for (let y = 8; y < 248; y += 14) {
+        for (let x = 8; x < 120; x += 16) {
+          if (Math.random() > 0.28) {
+            ctx.fillStyle = Math.random() > 0.45 ? '#00ffcc' : '#ff00aa';
+            ctx.fillRect(x, y, 9, 8);
+          } else {
+            ctx.fillStyle = '#161233';
+            ctx.fillRect(x, y, 9, 8);
+          }
+        }
+      }
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    }
+
+    const buildingTex = createBuildingTexture();
+
+    function generateWorld(seedStr) {
+      while (worldGroup.children.length > 0) {
+        const child = worldGroup.children[0];
+        worldGroup.remove(child);
+      }
+      buildings = [];
+      bridges = [];
+      preys = [];
+      enemies = [];
+      projectiles = [];
+      state.districtDestroyed = [0, 0, 0, 0];
+      state.districtTotals = [0, 0, 0, 0];
+
+      const rng = new SeededRNG(seedStr);
+      const R = CONFIG.PLANET_RADIUS;
+
+      // 1. Core Spherical Planet
+      const planetGeo = new THREE.SphereGeometry(R, 48, 48);
+      const planetMat = new THREE.MeshStandardMaterial({
+        color: 0x0c0920,
+        roughness: 0.75,
+        metalness: 0.25
+      });
+      planetMesh = new THREE.Mesh(planetGeo, planetMat);
+      worldGroup.add(planetMesh);
+
+      const wireSphere = new THREE.Mesh(
+        new THREE.SphereGeometry(R + 0.12, 28, 28),
+        new THREE.MeshBasicMaterial({ color: 0x00ffcc, wireframe: true, transparent: true, opacity: 0.12 })
+      );
+      worldGroup.add(wireSphere);
+
+      // 2. Glowing Swamp/Toxic Lake Patch
+      const lakeGeo = new THREE.SphereGeometry(R + 0.35, 32, 32, 0, Math.PI * 0.55, 0, Math.PI * 0.38);
+      const lakeMat = new THREE.MeshBasicMaterial({ color: 0x22ff44, transparent: true, opacity: 0.55, side: THREE.DoubleSide });
+      lakeMesh = new THREE.Mesh(lakeGeo, lakeMat);
+      lakeMesh.rotation.x = Math.PI * 0.65;
+      worldGroup.add(lakeMesh);
+
+      // 3. Highways Wrapping the Planet
+      for (let i = 0; i < 3; i++) {
+        const ringGeo = new THREE.TorusGeometry(R + 2.4 + i * 1.5, 0.65, 8, 96);
+        const ringMat = new THREE.MeshBasicMaterial({
+          color: i % 2 === 0 ? 0x00ffcc : 0xff00aa,
+          transparent: true,
+          opacity: 0.45
+        });
+        const highway = new THREE.Mesh(ringGeo, ringMat);
+        highway.rotation.x = (i * Math.PI) / 3 + 0.4;
+        highway.rotation.y = i * 0.8;
+        worldGroup.add(highway);
+        bridges.push(highway);
+      }
+
+      // 4. Instanced Skyscrapers & Towers across 4 City Zones
+      const totalBuildings = 210;
+      const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+      boxGeo.translate(0, 0.5, 0);
+
+      const bMat = new THREE.MeshStandardMaterial({
+        map: buildingTex,
+        roughness: 0.3,
+        metalness: 0.6
+      });
+      buildingInstMesh = new THREE.InstancedMesh(boxGeo, bMat, totalBuildings);
+      buildingInstMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+
+      const roofGeo = new THREE.BoxGeometry(1.06, 0.12, 1.06);
+      roofGeo.translate(0, 1.0, 0);
+      const roofMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      buildingRoofInstMesh = new THREE.InstancedMesh(roofGeo, roofMat, totalBuildings);
+      buildingRoofInstMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+
+      const cColor = new THREE.Color();
+
+      for (let i = 0; i < totalBuildings; i++) {
+        const u = rng.next();
+        const v = rng.next();
+        const theta = u * 2.0 * Math.PI;
+        const phi = Math.acos(2.0 * v - 1.0);
+
+        const normal = new THREE.Vector3(
+          Math.sin(phi) * Math.cos(theta),
+          Math.cos(phi),
+          Math.sin(phi) * Math.sin(theta)
+        ).normalize();
+
+        if (normal.y > 0.94) {
+          normal.x += 0.35;
+          normal.normalize();
+        }
+
+        const pos = normal.clone().multiplyScalar(R);
+        const district = getDistrictAt(pos);
+        state.districtTotals[district]++;
+
+        let width = rng.range(3.2, 6.2);
+        let depth = rng.range(3.2, 6.2);
+        let height = rng.range(10, 32);
+
+        if (district === 0) {
+          height = rng.range(18, 42);
+        } else if (district === 1) {
+          width = rng.range(5.0, 8.5);
+          height = rng.range(9, 22);
+        } else if (district === 2) {
+          height = rng.range(11, 26);
+        } else if (district === 3) {
+          width = rng.range(4.5, 7.5);
+          height = rng.range(14, 30);
+        }
+
+        const bObj = {
+          index: i,
+          pos,
+          normal,
+          width,
+          depth,
+          height,
+          maxHp: height * 4.2,
+          hp: height * 4.2,
+          district,
+          alive: true,
+          crackScale: 1.0
+        };
+        buildings.push(bObj);
+
+        dummyObj.position.copy(pos);
+        dummyObj.quaternion.setFromUnitVectors(upAxis, normal);
+        dummyObj.scale.set(width, height, depth);
+        dummyObj.updateMatrix();
+        buildingInstMesh.setMatrixAt(i, dummyObj.matrix);
+        buildingRoofInstMesh.setMatrixAt(i, dummyObj.matrix);
+
+        cColor.setHex(CONFIG.DISTRICTS[district].color);
+        buildingInstMesh.setColorAt(i, cColor);
+        buildingRoofInstMesh.setColorAt(i, cColor);
+      }
+
+      buildingInstMesh.instanceMatrix.needsUpdate = true;
+      buildingRoofInstMesh.instanceMatrix.needsUpdate = true;
+      if (buildingInstMesh.instanceColor) buildingInstMesh.instanceColor.needsUpdate = true;
+      if (buildingRoofInstMesh.instanceColor) buildingRoofInstMesh.instanceColor.needsUpdate = true;
+
+      worldGroup.add(buildingInstMesh);
+      worldGroup.add(buildingRoofInstMesh);
+
+      // 5. Floating Holographic Billboards
+      for (let i = 0; i < 18; i++) {
+        const theta = rng.range(0, Math.PI * 2);
+        const phi = rng.range(0.3, Math.PI - 0.3);
+        const normal = new THREE.Vector3(
+          Math.sin(phi) * Math.cos(theta),
+          Math.cos(phi),
+          Math.sin(phi) * Math.sin(theta)
+        ).normalize();
+        const bBoard = new THREE.Mesh(
+          new THREE.PlaneGeometry(11, 5.5),
+          new THREE.MeshBasicMaterial({
+            color: i % 2 === 0 ? 0xff00aa : 0x00ffcc,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.45
+          })
+        );
+        bBoard.position.copy(normal).multiplyScalar(R + rng.range(18, 32));
+        bBoard.lookAt(0, 0, 0);
+        worldGroup.add(bBoard);
+      }
+
+      // 6. Spawn Initial Prey (People, Cars, Drones)
+      for (let i = 0; i < 85; i++) {
+        spawnPrey(rng);
+      }
+    }
+
+    function updateBuildingMatrix(b) {
+      if (!b.alive) {
+        dummyObj.position.set(0, 0, 0);
+        dummyObj.scale.set(0.0001, 0.0001, 0.0001);
+      } else {
+        dummyObj.position.copy(b.pos);
+        dummyObj.quaternion.setFromUnitVectors(upAxis, b.normal);
+        dummyObj.scale.set(b.width * b.crackScale, b.height * (0.4 + 0.6 * (b.hp / b.maxHp)), b.depth * b.crackScale);
+      }
+      dummyObj.updateMatrix();
+      buildingInstMesh.setMatrixAt(b.index, dummyObj.matrix);
+      buildingRoofInstMesh.setMatrixAt(b.index, dummyObj.matrix);
+      buildingInstMesh.instanceMatrix.needsUpdate = true;
+      buildingRoofInstMesh.instanceMatrix.needsUpdate = true;
+    }
+
+    /* ============================================================================
+     * 8. REALISTIC 3D ANACONDA ANATOMY & S-WAVE SLITHERING
+     * ============================================================================ */
+    const snakeGroup = new THREE.Group();
+    scene.add(snakeGroup);
+
+    const snake = {
+      headPos: new THREE.Vector3(0, CONFIG.PLANET_RADIUS + 1.2, 0),
+      up: new THREE.Vector3(0, 1, 0),
+      forward: new THREE.Vector3(0, 0, 1),
+      altitude: 1.2,
+      verticalVel: 0,
+      hp: 100,
+      maxHp: 100,
+      stamina: 100,
+      level: 1,
+      xp: 0,
+      nextXp: 100,
+      segmentCount: CONFIG.INITIAL_SEGMENTS,
+      pathHistory: [],
+      segmentMeshes: [],
+      bulges: [],
+      coilingTarget: null,
+      coilAngle: 0,
+      invulnTimer: 0,
+      electricTimer: 0,
+      biteTimer: 0,
+      headGroup: null,
+      lowerJawGroup: null,
+      tongueGroup: null,
+      hoodMesh: null
+    };
+
+    // Slightly flattened muscular cross-section geometry for each vertebra segment
+    const segGeo = new THREE.SphereGeometry(1.22, 16, 12);
+
+    function initSnake() {
+      while (snakeGroup.children.length > 0) {
+        snakeGroup.remove(snakeGroup.children[0]);
+      }
+      snake.segmentMeshes = [];
+      snake.pathHistory = [];
+      snake.bulges = [];
+
+      snake.headPos.set(0, CONFIG.PLANET_RADIUS + 1.2, 0);
+      snake.up.set(0, 1, 0);
+      snake.forward.set(0, 0, 1);
+      snake.altitude = 1.2;
+      snake.verticalVel = 0;
+      snake.hp = 100;
+      snake.maxHp = 100;
+      snake.stamina = 100;
+      snake.level = 1;
+      snake.xp = 0;
+      snake.nextXp = 100;
+      snake.segmentCount = CONFIG.INITIAL_SEGMENTS;
+      snake.coilingTarget = null;
+      snake.invulnTimer = 0;
+      snake.biteTimer = 0;
+
+      /*
+       * Build Realistic 3D Anaconda Head:
+       * - Broad triangular back skull tapering to a rounded snout
+       * - High-set golden reptile eyes with vertical slit pupils + dark eye-stripe
+       * - Hinged lower jaw with curved white rear-facing fangs & pink inner mouth
+       * - Flicking crimson forked tongue
+       */
+      const headGroup = new THREE.Group();
+
+      // Main broad upper cranium
+      const cranium = new THREE.Mesh(new THREE.SphereGeometry(1.45, 18, 14), snakeMaterial);
+      cranium.scale.set(1.22, 0.72, 1.55);
+      cranium.position.set(0, 0.18, 0.2);
+      headGroup.add(cranium);
+
+      // Rounded snout bridge
+      const snout = new THREE.Mesh(new THREE.SphereGeometry(1.12, 16, 12), snakeMaterial);
+      snout.scale.set(1.05, 0.58, 1.35);
+      snout.position.set(0, 0.1, 1.45);
+      headGroup.add(snout);
+
+      // Characteristic dark post-orbital eye stripes (signature Green Anaconda marking)
+      const stripeMat = new THREE.MeshBasicMaterial({ color: 0x090d07 });
+      const stripeL = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.26, 1.6), stripeMat);
+      stripeL.position.set(1.28, 0.35, 0.15);
+      stripeL.rotation.y = 0.22;
+      const stripeR = stripeL.clone();
+      stripeR.position.x = -1.28;
+      stripeR.rotation.y = -0.22;
+      headGroup.add(stripeL, stripeR);
+
+      // Golden-Amber Reptile Eyes with Vertical Slit Pupils (set high on the head)
+      const irisMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+      const pupilMat = new THREE.MeshBasicMaterial({ color: 0x050505 });
+
+      const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 12), irisMat);
+      eyeL.position.set(1.05, 0.58, 0.95);
+      const pupilL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.52, 0.25), pupilMat);
+      pupilL.position.set(0.22, 0, 0.12);
+      eyeL.add(pupilL);
+
+      const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 12), irisMat);
+      eyeR.position.set(-1.05, 0.58, 0.95);
+      const pupilR = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.52, 0.25), pupilMat);
+      pupilR.position.set(-0.22, 0, 0.12);
+      eyeR.add(pupilR);
+
+      headGroup.add(eyeL, eyeR);
+
+      // Nostril pits on snout tip
+      const nostrilL = new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 6), pupilMat);
+      nostrilL.position.set(0.42, 0.36, 2.55);
+      const nostrilR = nostrilL.clone();
+      nostrilR.position.x = -0.42;
+      headGroup.add(nostrilL, nostrilR);
+
+      // Hinged Lower Jaw + Pink Inner Mouth + Curved White Fangs
+      const lowerJawGroup = new THREE.Group();
+      lowerJawGroup.position.set(0, -0.15, -0.2);
+
+      const jawBone = new THREE.Mesh(new THREE.SphereGeometry(1.15, 14, 10), snakeMaterial);
+      jawBone.scale.set(0.98, 0.38, 1.85);
+      jawBone.position.set(0, -0.15, 1.15);
+      lowerJawGroup.add(jawBone);
+
+      const innerMouth = new THREE.Mesh(
+        new THREE.SphereGeometry(0.95, 12, 8),
+        new THREE.MeshBasicMaterial({ color: 0xbe185d })
+      );
+      innerMouth.scale.set(0.85, 0.22, 1.55);
+      innerMouth.position.set(0, 0.02, 1.15);
+      lowerJawGroup.add(innerMouth);
+
+      // Upper & Lower Curved White Fangs
+      const fangMat = new THREE.MeshBasicMaterial({ color: 0xf8fafc });
+      const fangGeo = new THREE.ConeGeometry(0.11, 0.55, 8);
+      const fangUL = new THREE.Mesh(fangGeo, fangMat);
+      fangUL.position.set(0.55, -0.12, 2.1);
+      fangUL.rotation.x = Math.PI * 0.88;
+      const fangUR = fangUL.clone();
+      fangUR.position.x = -0.55;
+      headGroup.add(fangUL, fangUR);
+
+      headGroup.add(lowerJawGroup);
+      snake.lowerJawGroup = lowerJawGroup;
+
+      // Flicking Crimson Forked Tongue
+      const tongueGroup = new THREE.Group();
+      tongueGroup.position.set(0, -0.05, 2.4);
+      const tongueMat = new THREE.MeshBasicMaterial({ color: 0xf43f5e });
+      const tongueStem = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.05, 1.4), tongueMat);
+      tongueStem.position.set(0, 0, 0.7);
+      const forkL = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.65, 6), tongueMat);
+      forkL.rotation.x = Math.PI * 0.5;
+      forkL.rotation.y = 0.32;
+      forkL.position.set(0.16, 0, 1.55);
+      const forkR = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.65, 6), tongueMat);
+      forkR.rotation.x = Math.PI * 0.5;
+      forkR.rotation.y = -0.32;
+      forkR.position.set(-0.16, 0, 1.55);
+      tongueGroup.add(tongueStem, forkL, forkR);
+      headGroup.add(tongueGroup);
+      snake.tongueGroup = tongueGroup;
+
+      // Spreadable Rib Hood (when Glide Wings upgrade or Rampage is active)
+      const hoodMesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(2.6, 1.8, 0.35, 14),
+        snakeMaterial
+      );
+      hoodMesh.position.set(0, 0, -0.8);
+      hoodMesh.scale.set(0.01, 1, 0.01);
+      headGroup.add(hoodMesh);
+      snake.hoodMesh = hoodMesh;
+
+      snake.headGroup = headGroup;
+      snakeGroup.add(headGroup);
+
+      // Seed initial path history along the planet surface behind the head
+      const maxPathLen = CONFIG.MAX_SEGMENTS * 6;
+      for (let i = 0; i < maxPathLen; i++) {
+        const backPos = snake.headPos.clone().addScaledVector(snake.forward, -i * 0.25);
+        backPos.normalize().multiplyScalar(CONFIG.PLANET_RADIUS + 1.2);
+        snake.pathHistory.push(backPos);
+      }
+
+      // Create muscular body segments that orient smoothly along the spine
+      for (let i = 0; i < CONFIG.MAX_SEGMENTS; i++) {
+        const m = new THREE.Mesh(segGeo, snakeMaterial);
+        m.visible = i < snake.segmentCount;
+        snakeGroup.add(m);
+        snake.segmentMeshes.push(m);
+      }
+    }
+
+    function addSnakeGrowth(xpGain, hpRestore = 4) {
+      snake.hp = Math.min(snake.maxHp, snake.hp + hpRestore);
+      snake.xp += xpGain;
+      // Trigger realistic jaw bite opening + stomach lump moving down the body
+      snake.biteTimer = 0.35;
+      snake.bulges.push({ progress: 0, scale: 1.65 });
+      audio.playSfx('swallow');
+
+      if (snake.segmentCount < CONFIG.MAX_SEGMENTS) {
+        snake.segmentCount++;
+        snake.segmentMeshes[snake.segmentCount - 1].visible = true;
+      }
+
+      // Check Level Up -> Trigger Upgrade Picker
+      if (snake.xp >= snake.nextXp) {
+        snake.xp -= snake.nextXp;
+        snake.level++;
+        snake.nextXp = Math.floor(snake.nextXp * 1.35);
+        audio.playSfx('levelup');
+        openEvolutionModal();
+      }
+    }
+
+    /* ============================================================================
+     * 9. PREY, ENEMIES, BOSSES & PARTICLES
+     * ============================================================================ */
+    const preyGeos = {
+      civilian: new THREE.OctahedronGeometry(0.65, 0),
+      car: new THREE.BoxGeometry(1.5, 0.9, 2.6),
+      drone: new THREE.OctahedronGeometry(1.1, 1)
+    };
+    const preyMats = {
+      civilian: new THREE.MeshBasicMaterial({ color: 0x00ffff }),
+      car: new THREE.MeshBasicMaterial({ color: 0xffaa00 }),
+      drone: new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
+    };
+
+    function spawnPrey(rng = null) {
+      const r = rng ? () => rng.next() : () => Math.random();
+      const u = r(), v = r();
+      const theta = u * 2 * Math.PI;
+      const phi = Math.acos(2 * v - 1);
+      const normal = new THREE.Vector3(
+        Math.sin(phi) * Math.cos(theta),
+        Math.cos(phi),
+        Math.sin(phi) * Math.sin(theta)
+      ).normalize();
+
+      const roll = r();
+      const type = roll < 0.45 ? 'civilian' : (roll < 0.8 ? 'car' : 'drone');
+      const alt = type === 'drone' ? 5.5 + r() * 6 : 1.0;
+
+      const mesh = new THREE.Mesh(preyGeos[type], preyMats[type]);
+      const pos = normal.clone().multiplyScalar(CONFIG.PLANET_RADIUS + alt);
+      mesh.position.copy(pos);
+
+      const tangent = new THREE.Vector3(r() - 0.5, r() - 0.5, r() - 0.5).projectOnPlane(normal).normalize();
+      worldGroup.add(mesh);
+
+      preys.push({
+        type,
+        mesh,
+        pos,
+        normal,
+        dir: tangent,
+        alt,
+        speed: type === 'civilian' ? 4.5 : (type === 'car' ? 11.5 : 14.0),
+        xpValue: type === 'civilian' ? 12 : (type === 'car' ? 22 : 28),
+        scoreValue: type === 'civilian' ? 150 : (type === 'car' ? 350 : 450)
+      });
+    }
+
+    function spawnEnemyUnit() {
+      const maxEnemies = 6 + state.huntLevel * 3;
+      if (enemies.length >= maxEnemies) return;
+
+      const randVec = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+      const normal = snake.up.clone().addScaledVector(randVec, 0.85).normalize();
+
+      let type = 'drone';
+      if (state.huntLevel >= 2 && Math.random() < 0.45) type = 'tank';
+      if (state.huntLevel >= 3 && Math.random() < 0.38) type = 'heli';
+      if (state.huntLevel >= 4 && Math.random() < 0.32) type = 'mech';
+
+      const alt = (type === 'drone' || type === 'heli') ? 8.5 + Math.random() * 5 : 1.4;
+      const pos = normal.clone().multiplyScalar(CONFIG.PLANET_RADIUS + alt);
+
+      let geo, col, hp, speed;
+      if (type === 'drone') {
+        geo = new THREE.OctahedronGeometry(1.4, 0);
+        col = 0x60a5fa; hp = 18; speed = 15;
+      } else if (type === 'tank') {
+        geo = new THREE.BoxGeometry(2.8, 1.8, 3.8);
+        col = 0xf59e0b; hp = 45; speed = 8;
+      } else if (type === 'heli') {
+        geo = new THREE.ConeGeometry(1.9, 4.2, 6);
+        col = 0xf43f5e; hp = 40; speed = 17;
+      } else {
+        geo = new THREE.BoxGeometry(3.2, 4.6, 3.2);
+        col = 0xc084fc; hp = 75; speed = 11;
+      }
+
+      const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: col }));
+      const weakRing = new THREE.Mesh(
+        new THREE.RingGeometry(1.8, 2.3, 16),
+        new THREE.MeshBasicMaterial({ color: 0xff0055, side: THREE.DoubleSide })
+      );
+      mesh.add(weakRing);
+
+      mesh.position.copy(pos);
+      worldGroup.add(mesh);
+
+      enemies.push({
+        type,
+        mesh,
+        pos,
+        normal,
+        alt,
+        hp,
+        maxHp: hp,
+        speed,
+        fireCooldown: 1.5 + Math.random() * 2.0
+      });
+    }
+
+    function spawnDistrictBoss(districtIdx) {
+      if (state.boss) return;
+      const dInfo = CONFIG.DISTRICTS[districtIdx % 4];
+      const normal = snake.up.clone().addScaledVector(snake.forward, 0.55).normalize();
+      const alt = dInfo.bossType === 'carrier' ? 11.0 : 3.5;
+      const pos = normal.clone().multiplyScalar(CONFIG.PLANET_RADIUS + alt);
+
+      const bossGroup = new THREE.Group();
+      const coreMesh = new THREE.Mesh(
+        dInfo.bossType === 'cobra'
+          ? new THREE.TorusKnotGeometry(4.8, 1.5, 64, 12)
+          : new THREE.OctahedronGeometry(5.5, 1),
+        new THREE.MeshStandardMaterial({
+          color: dInfo.color,
+          emissive: 0xff0055,
+          emissiveIntensity: 0.6,
+          roughness: 0.2,
+          metalness: 0.8
+        })
+      );
+      bossGroup.add(coreMesh);
+
+      const shieldRing = new THREE.Mesh(
+        new THREE.TorusGeometry(8.2, 0.45, 12, 48),
+        new THREE.MeshBasicMaterial({ color: 0xff0055 })
+      );
+      bossGroup.add(shieldRing);
+
+      const telegraphRing = new THREE.Mesh(
+        new THREE.RingGeometry(1.0, 14.0, 32),
+        new THREE.MeshBasicMaterial({ color: 0xff2244, side: THREE.DoubleSide, transparent: true, opacity: 0.0 })
+      );
+      worldGroup.add(telegraphRing);
+
+      bossGroup.position.copy(pos);
+      worldGroup.add(bossGroup);
+
+      const maxHp = 260 + districtIdx * 120;
+      state.boss = {
+        name: dInfo.bossName,
+        type: dInfo.bossType,
+        district: districtIdx,
+        mesh: bossGroup,
+        coreMesh,
+        shieldRing,
+        telegraphRing,
+        pos,
+        normal,
+        alt,
+        hp: maxHp,
+        maxHp,
+        phase: 1,
+        attackTimer: 3.0,
+        telegraphTimer: 0
+      };
+
+      document.getElementById('hud-boss-panel').classList.remove('hidden');
+      document.getElementById('hud-boss-name').textContent = `⚠ ${dInfo.bossName}`;
+      showToast(`⚠ BOSS ARRIVED: ${dInfo.bossName}!`);
+      audio.playSfx('roar');
+    }
+
+    const particleGeo = new THREE.BoxGeometry(0.55, 0.55, 0.55);
+    function spawnParticles(pos, colorHex, count = 14, speedScale = 18) {
+      for (let i = 0; i < count; i++) {
+        if (particles.length > 160) {
+          const oldest = particles.shift();
+          worldGroup.remove(oldest.mesh);
+        }
+        const m = new THREE.Mesh(particleGeo, new THREE.MeshBasicMaterial({ color: colorHex }));
+        m.position.copy(pos);
+        const vel = new THREE.Vector3(
+          (Math.random() - 0.5) * speedScale,
+          (Math.random() - 0.5) * speedScale,
+          (Math.random() - 0.5) * speedScale
+        );
+        worldGroup.add(m);
+        particles.push({ mesh: m, vel, life: 0.55 + Math.random() * 0.45 });
+      }
+    }
+
+    function spawnProjectile(pos, dir, isPlayer, colorHex = 0x84cc16, damage = 28) {
+      const m = new THREE.Mesh(
+        new THREE.SphereGeometry(isPlayer ? 0.95 : 0.7, 8, 8),
+        new THREE.MeshBasicMaterial({ color: colorHex })
+      );
+      m.position.copy(pos);
+      worldGroup.add(m);
+      projectiles.push({
+        mesh: m,
+        pos: pos.clone(),
+        dir: dir.clone().normalize(),
+        speed: isPlayer ? 68 : 42,
+        isPlayer,
+        damage,
+        life: 2.2
+      });
+    }
+
+    /* ============================================================================
+     * 10. SNAKE MOVES & ABILITIES
+     * ============================================================================ */
+    function triggerVenomSpit() {
+      if (state.status !== 'playing' || state.cooldowns.venom > 0) return;
+      state.cooldowns.venom = 1.25;
+      snake.biteTimer = 0.3;
+      audio.playSfx('venom');
+
+      const hasAcid = !!state.mutations.acid;
+      const spreadAngles = hasAcid ? [-0.18, 0, 0.18] : [0];
+      spreadAngles.forEach(ang => {
+        const dir = snake.forward.clone().applyAxisAngle(snake.up, ang);
+        spawnProjectile(
+          snake.headPos.clone().addScaledVector(snake.forward, 2.5),
+          dir,
+          true,
+          hasAcid ? 0xa3e635 : 0x00ffcc,
+          hasAcid ? 42 : 28
+        );
+      });
+    }
+
+    function triggerRoarAndTailWhip() {
+      if (state.status !== 'playing' || state.cooldowns.roar > 0) return;
+      state.cooldowns.roar = 4.5;
+      snake.biteTimer = 0.45;
+      audio.playSfx('roar');
+      state.cameraShake = 0.85;
+      showToast('💥 TAIL SMASH & SHOCKWAVE!');
+
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(2, 22, 32),
+        new THREE.MeshBasicMaterial({ color: 0xff00aa, side: THREE.DoubleSide, transparent: true, opacity: 0.75 })
+      );
+      ring.position.copy(snake.headPos);
+      ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), snake.up);
+      worldGroup.add(ring);
+      setTimeout(() => worldGroup.remove(ring), 320);
+
+      const whipOrigin = snake.segmentMeshes[Math.min(snake.segmentCount - 1, snake.segmentMeshes.length - 1)].position;
+
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+        const dHead = e.pos.distanceTo(snake.headPos);
+        const dTail = e.pos.distanceTo(whipOrigin);
+        if (dHead < 26 || dTail < 26) {
+          e.hp -= 55;
+          spawnParticles(e.pos, 0xff00aa, 12, 24);
+          if (e.hp <= 0) destroyEnemy(i);
+        }
+      }
+
+      if (state.boss && state.boss.pos.distanceTo(snake.headPos) < 28) {
+        damageBoss(45);
+      }
+
+      for (let i = preys.length - 1; i >= 0; i--) {
+        if (preys[i].pos.distanceTo(snake.headPos) < 24) {
+          consumePrey(i);
+        }
+      }
+    }
+
+    function triggerPredatorVision() {
+      if (state.status !== 'playing' || state.cooldowns.vision > 0) return;
+      state.cooldowns.vision = 9.0;
+      state.predatorTime = 4.5;
+      snakeShaderUniforms.uPredator.value = 1.0;
+      document.getElementById('predator-overlay').style.opacity = '1';
+      showToast('👁️ HEAT VISION ON (SLOW-MOTION)');
+      audio.playSfx('hiss');
+    }
+
+    function triggerShedSkin() {
+      if (state.status !== 'playing' || state.cooldowns.shed > 0) return;
+      state.cooldowns.shed = 14.0;
+      snake.invulnTimer = 4.0;
+      snake.stamina = 100;
+      snake.hp = Math.min(snake.maxHp, snake.hp + 25);
+      audio.playSfx('levelup');
+      showToast('🐍 SHED SKIN! +25 HEALTH & DECOY LEFT BEHIND!');
+
+      if (state.decoy) worldGroup.remove(state.decoy.mesh);
+      const decoyMesh = new THREE.Mesh(
+        new THREE.TorusKnotGeometry(3.2, 0.85, 36, 8),
+        new THREE.MeshBasicMaterial({ color: 0x00ffcc, wireframe: true })
+      );
+      decoyMesh.position.copy(snake.headPos);
+      worldGroup.add(decoyMesh);
+      state.decoy = { mesh: decoyMesh, pos: snake.headPos.clone(), timer: 6.0 };
+    }
+
+    function triggerLungeJump() {
+      if (state.status !== 'playing') return;
+      if (snake.altitude <= 2.2) {
+        snake.verticalVel = CONFIG.JUMP_IMPULSE * (state.mutations.glide ? 1.25 : 1.0);
+        snake.coilingTarget = null;
+        audio.playSfx('hiss');
+      }
+    }
+
+    /* ============================================================================
+     * 11. COMBAT, DESTRUCTION & BOSS LOGIC
+     * ============================================================================ */
+    function addScoreAndCombo(basePts) {
+      const diffMult = CONFIG.DIFFICULTY[state.difficulty].scoreMult;
+      const rampMult = state.rampageTime > 0 ? 2.0 : 1.0;
+      state.score += Math.floor(basePts * state.combo * diffMult * rampMult);
+
+      state.combo = Math.min(10.0, +(state.combo + 0.25).toFixed(2));
+      state.maxCombo = Math.max(state.maxCombo, state.combo);
+      state.comboTimer = 4.5;
+
+      if (state.rampageTime <= 0) {
+        state.rampageMeter = Math.min(100, state.rampageMeter + 8.5);
+        if (state.rampageMeter >= 100) {
+          state.rampageTime = 8.0;
+          state.rampageMeter = 0;
+          snakeShaderUniforms.uRampage.value = 1.0;
+          document.getElementById('rampage-overlay').style.opacity = '1';
+          showToast('🔥 FIRE RAMPAGE! (2X SPEED & INVINCIBLE)');
+          audio.playSfx('roar');
+        }
+      }
+
+      state.streakCount = (state.streakCount || 0) + 1;
+      if (state.streakCount === 3) {
+        showToast('⚡ 3x HUNTER STREAK!');
+        spawnFloatingText(snake.head.position, '⚡ 3x STREAK!', '#38bdf8', '20px');
+      } else if (state.streakCount === 7) {
+        showToast('🔥 7x APEX PREDATOR!');
+        spawnFloatingText(snake.head.position, '🔥 APEX PREDATOR!', '#f97316', '24px');
+        audio.playSfx('roar');
+      } else if (state.streakCount === 12) {
+        showToast('👑 12x TITAN OMNIVORE!');
+        spawnFloatingText(snake.head.position, '👑 TITAN OMNIVORE!', '#ec4899', '28px');
+        state.rampageTime = Math.min(10, state.rampageTime + 4.5);
+        state.cameraShake = 1.0;
+        audio.playSfx('roar');
+      }
+
+      const newHunt = Math.min(5, 1 + Math.floor(state.score / 8500));
+      if (newHunt > state.huntLevel) {
+        state.huntLevel = newHunt;
+        audio.huntLevel = newHunt;
+        showToast(`🚨 ENEMY ALERT LEVEL UP TO ★${newHunt}!`);
+      }
+    }
+
+    function consumePrey(idx) {
+      const p = preys[idx];
+      if (!p) return;
+      spawnParticles(p.pos, 0x00ffcc, 8, 14);
+      worldGroup.remove(p.mesh);
+      preys.splice(idx, 1);
+
+      state.unitsEaten++;
+      addSnakeGrowth(p.xpValue, 5);
+      addScoreAndCombo(p.scoreValue);
+      spawnFloatingText(p.pos, `+${p.scoreValue} CHOMP!`, '#10b981', '18px');
+      spawnPrey();
+    }
+
+    function destroyBuilding(b) {
+      if (!b.alive) return;
+      b.alive = false;
+      b.hp = 0;
+      updateBuildingMatrix(b);
+
+      state.buildingsCrushed++;
+      state.districtDestroyed[b.district]++;
+      state.cameraShake = 0.8;
+      audio.playSfx('explosion');
+      spawnParticles(b.pos.clone().addScaledVector(b.normal, b.height * 0.5), CONFIG.DISTRICTS[b.district].color, 28, 30);
+      spawnFloatingText(b.pos, '💥 CRUSH! +800', '#f59e0b', '20px');
+
+      addSnakeGrowth(28, 8);
+      addScoreAndCombo(800);
+
+      if (snake.coilingTarget === b) {
+        snake.coilingTarget = null;
+      }
+
+      const d = state.currentDistrict;
+      const pct = Math.min(100, Math.round((state.districtDestroyed[d] / Math.max(1, state.districtTotals[d] * 0.45)) * 100));
+      if (state.mode === 'campaign' && pct >= 70 && !state.boss) {
+        spawnDistrictBoss(d);
+      }
+    }
+
+    function destroyEnemy(idx) {
+      const e = enemies[idx];
+      if (!e) return;
+      spawnParticles(e.pos, 0xff5500, 16, 22);
+      worldGroup.remove(e.mesh);
+      enemies.splice(idx, 1);
+      audio.playSfx('crunch');
+      state.unitsEaten++;
+      addSnakeGrowth(32, 7);
+      addScoreAndCombo(650);
+      spawnFloatingText(e.pos, '⚡ TERMINATED! +650', '#ef4444', '18px');
+    }
+
+    function damageBoss(dmg) {
+      if (!state.boss) return;
+      state.boss.hp -= dmg;
+      spawnParticles(state.boss.pos, 0xff0055, 10, 20);
+      audio.playSfx('crunch');
+
+      if (state.boss.hp <= state.boss.maxHp * 0.5 && state.boss.phase === 1) {
+        state.boss.phase = 2;
+        document.getElementById('hud-boss-phase').textContent = 'STAGE 2 (ANGRY)';
+        showToast(`⚡ ${state.boss.name} ENTERED STAGE 2!`);
+      }
+
+      if (state.boss.hp <= 0) {
+        const bossPos = state.boss.pos.clone();
+        const bossName = state.boss.name;
+        worldGroup.remove(state.boss.mesh);
+        worldGroup.remove(state.boss.telegraphRing);
+        state.boss = null;
+        document.getElementById('hud-boss-panel').classList.add('hidden');
+
+        state.bossesSlain++;
+        state.slowMoTimer = 1.8;
+        state.cameraShake = 1.2;
+        spawnParticles(bossPos, 0xffd700, 45, 36);
+        audio.playSfx('explosion');
+        addScoreAndCombo(5000);
+        addSnakeGrowth(100, 35);
+
+        if (state.mode === 'campaign') {
+          if (state.currentDistrict < 3) {
+            state.currentDistrict++;
+            showToast(`🏆 ${bossName} DEFEATED! NEXT ZONE: ${CONFIG.DISTRICTS[state.currentDistrict].name}!`);
+          } else {
+            triggerGameOver(true);
+          }
+        } else {
+          showToast(`🏆 ${bossName} DEFEATED! +5,000 PTS!`);
+        }
+      }
+    }
+
+    function damageSnake(rawDmg) {
+      if (snake.invulnTimer > 0 || state.rampageTime > 0) return;
+      const diffMult = CONFIG.DIFFICULTY[state.difficulty].dmgMult;
+      const armorMult = state.mutations.armor ? 0.65 : 1.0;
+      const dmg = rawDmg * diffMult * armorMult;
+      snake.hp = Math.max(0, snake.hp - dmg);
+      state.cameraShake = 0.45;
+
+      const flash = document.getElementById('damage-flash');
+      flash.style.opacity = '1';
+      setTimeout(() => { flash.style.opacity = '0'; }, 140);
+
+      if (snake.hp <= 0) {
+        triggerGameOver(false);
+      }
+    }
+
+    /* ============================================================================
+     * 12. FIXED-TIMESTEP PHYSICS & REALISTIC ANACONDA LOCOMOTION
+     * ============================================================================ */
+    function updateSimulation(rawDt) {
+      if (state.status !== 'playing') return;
+
+      let timeScale = 1.0;
+      if (state.slowMoTimer > 0) {
+        state.slowMoTimer = Math.max(0, state.slowMoTimer - rawDt);
+        timeScale = 0.32;
+      } else if (state.predatorTime > 0) {
+        state.predatorTime = Math.max(0, state.predatorTime - rawDt);
+        timeScale = 0.55;
+        if (state.predatorTime <= 0) {
+          snakeShaderUniforms.uPredator.value = 0.0;
+          document.getElementById('predator-overlay').style.opacity = 0;
+        }
+      }
+
+      const dt = rawDt * timeScale;
+      const elapsed = (snakeShaderUniforms.uTime.value += dt);
+
+      // Day/Night & Aurora cycle
+      state.dayTime = (state.dayTime + dt * 0.012) % 1.0;
+      const sunAngle = state.dayTime * Math.PI * 2;
+      dirLight.position.set(Math.cos(sunAngle) * 240, Math.sin(sunAngle) * 240, 130);
+      auroraMesh.rotation.z += dt * 0.12;
+
+      // Cooldowns & Timers
+      for (const k in state.cooldowns) {
+        if (state.cooldowns[k] > 0) state.cooldowns[k] = Math.max(0, state.cooldowns[k] - rawDt);
+      }
+      if (snake.invulnTimer > 0) snake.invulnTimer = Math.max(0, snake.invulnTimer - rawDt);
+      if (snake.biteTimer > 0) snake.biteTimer = Math.max(0, snake.biteTimer - rawDt);
+
+      if (state.comboTimer > 0) {
+        state.comboTimer -= rawDt;
+        if (state.comboTimer <= 0) { state.combo = 1.0; state.streakCount = 0; }
+      }
+
+      if (state.rampageTime > 0) {
+        state.rampageTime = Math.max(0, state.rampageTime - rawDt);
+        if (state.rampageTime <= 0) {
+          snakeShaderUniforms.uRampage.value = 0.0;
+          document.getElementById('rampage-overlay').style.opacity = '0';
+        }
+      }
+
+      if (state.mutations.regen && snake.hp < snake.maxHp) {
+        snake.hp = Math.min(snake.maxHp, snake.hp + 4.5 * dt);
+      }
+
+      if (state.mutations.electric) {
+        snake.electricTimer += dt;
+        if (snake.electricTimer >= 1.35) {
+          snake.electricTimer = 0;
+          for (let i = enemies.length - 1; i >= 0; i--) {
+            if (enemies[i].pos.distanceTo(snake.headPos) < 20) {
+              enemies[i].hp -= 24;
+              spawnParticles(enemies[i].pos, 0x00ffff, 6, 15);
+              if (enemies[i].hp <= 0) destroyEnemy(i);
+              break;
+            }
+          }
+        }
+      }
+
+      if (state.decoy) {
+        state.decoy.timer -= dt;
+        state.decoy.mesh.rotation.y += dt * 4;
+        if (state.decoy.timer <= 0) {
+          worldGroup.remove(state.decoy.mesh);
+          state.decoy = null;
+        }
+      }
+
+      // 1. Steering Input
+      let turnInput = 0;
+      if (keys.a || keys.left) turnInput += 1;
+      if (keys.d || keys.right) turnInput -= 1;
+      if (joyInput.active) turnInput -= joyInput.x * 1.25;
+      if (state.mouseSteerEnabled) turnInput -= state.mouseX * 1.35;
+
+      if (Math.abs(turnInput) > 0.001) {
+        snake.forward.applyAxisAngle(snake.up, turnInput * CONFIG.TURN_RATE * dt).normalize();
+      }
+
+      // 2. Sprint / Boost Speed
+      const wantsBoost = (keys.shift || (joyInput.active && joyInput.y < -0.65)) && snake.stamina > 5;
+      let currentSpeed = CONFIG.BASE_SPEED;
+      if (wantsBoost) {
+        currentSpeed = CONFIG.BOOST_SPEED;
+        snake.stamina = Math.max(0, snake.stamina - 26 * rawDt);
+        document.getElementById('speed-lines').style.opacity = '1';
+      } else {
+        snake.stamina = Math.min(100, snake.stamina + 16 * rawDt);
+        document.getElementById('speed-lines').style.opacity = '0';
+      }
+      if (state.rampageTime > 0) currentSpeed *= 1.35;
+
+      const targetFov = wantsBoost || state.rampageTime > 0 ? 78 : 62;
+      camera.fov += (targetFov - camera.fov) * 0.12;
+      camera.updateProjectionMatrix();
+
+      const hoodScale = (state.mutations.glide || state.rampageTime > 0) ? 1.0 : 0.01;
+      snake.hoodMesh.scale.x += (hoodScale - snake.hoodMesh.scale.x) * 0.15;
+      snake.hoodMesh.scale.z = snake.hoodMesh.scale.x;
+
+      // 3. Check for Nearby Building to Wrap & Squeeze
+      let nearestCoilCandidate = null;
+      let nearestDist = 14.5;
+      for (let i = 0; i < buildings.length; i++) {
+        const b = buildings[i];
+        if (!b.alive) continue;
+        const d = b.pos.distanceTo(snake.headPos);
+        if (d < nearestDist) {
+          nearestDist = d;
+          nearestCoilCandidate = b;
+        }
+      }
+
+      const coilPromptEl = document.getElementById('hud-coil-prompt');
+      if (nearestCoilCandidate) {
+        coilPromptEl.classList.remove('hidden');
+      } else {
+        coilPromptEl.classList.add('hidden');
+      }
+
+      // 4. Movement: Coiling around a building OR Slithering across the planet
+      if (keys.e && nearestCoilCandidate && snake.stamina > 2) {
+        snake.coilingTarget = nearestCoilCandidate;
+        const b = snake.coilingTarget;
+        snake.stamina = Math.max(0, snake.stamina - 14 * rawDt);
+        snake.coilAngle += dt * 7.5;
+
+        const basisA = new THREE.Vector3(1, 0, 0);
+        if (Math.abs(b.normal.x) > 0.9) basisA.set(0, 1, 0);
+        const tangent1 = basisA.cross(b.normal).normalize();
+        const tangent2 = b.normal.clone().cross(tangent1).normalize();
+
+        const coilRadius = Math.max(3.2, (b.width + b.depth) * 0.36);
+        const climbHeight = 2.5 + ((Math.sin(snake.coilAngle * 0.5) * 0.5 + 0.5) * (b.height * 0.75));
+
+        snake.headPos.copy(b.pos)
+          .addScaledVector(b.normal, climbHeight)
+          .addScaledVector(tangent1, Math.cos(snake.coilAngle) * coilRadius)
+          .addScaledVector(tangent2, Math.sin(snake.coilAngle) * coilRadius);
+
+        snake.up.copy(snake.headPos).normalize();
+        snake.forward.copy(tangent1).multiplyScalar(-Math.sin(snake.coilAngle))
+          .addScaledVector(tangent2, Math.cos(snake.coilAngle)).normalize();
+
+        b.hp -= 85 * dt * (state.rampageTime > 0 ? 2.0 : 1.0);
+        b.crackScale = 0.85 + 0.15 * Math.sin(snake.coilAngle * 3.0);
+        updateBuildingMatrix(b);
+
+        if (Math.random() < 0.35) {
+          spawnParticles(snake.headPos, CONFIG.DISTRICTS[b.district].color, 2, 12);
+          audio.playSfx('crunch');
+        }
+
+        if (b.hp <= 0) {
+          destroyBuilding(b);
+        }
+      } else {
+        snake.coilingTarget = null;
+
+        if (snake.altitude > 1.2 || snake.verticalVel !== 0) {
+          const grav = CONFIG.GRAVITY * (state.mutations.glide && snake.verticalVel < 0 ? 0.38 : 1.0);
+          snake.verticalVel -= grav * dt;
+          snake.altitude += snake.verticalVel * dt;
+          if (snake.altitude <= 1.2) {
+            snake.altitude = 1.2;
+            snake.verticalVel = 0;
+          }
+        }
+
+        // Authentic lateral undulation wave at the head
+        const slitherWave = Math.sin(elapsed * 9.5) * 0.24;
+        const rightVec = snake.forward.clone().cross(snake.up).normalize();
+        const moveDir = snake.forward.clone().addScaledVector(rightVec, slitherWave).normalize();
+
+        snake.headPos.addScaledVector(moveDir, currentSpeed * dt);
+        snake.up.copy(snake.headPos).normalize();
+        snake.headPos.copy(snake.up).multiplyScalar(CONFIG.PLANET_RADIUS + snake.altitude);
+        snake.forward.projectOnPlane(snake.up).normalize();
+
+        // Building Collision / Climbing / Smashing
+        for (let i = 0; i < buildings.length; i++) {
+          const b = buildings[i];
+          if (!b.alive) continue;
+          const surfaceDist = b.pos.distanceTo(tempVecA.copy(snake.up).multiplyScalar(CONFIG.PLANET_RADIUS));
+          const hitRadius = (b.width + b.depth) * 0.34 + 1.4;
+          if (surfaceDist < hitRadius && snake.altitude < b.height) {
+            if (wantsBoost || state.rampageTime > 0) {
+              b.hp -= 120 * dt;
+              spawnParticles(snake.headPos, CONFIG.DISTRICTS[b.district].color, 4, 16);
+              updateBuildingMatrix(b);
+              if (b.hp <= 0) destroyBuilding(b);
+            } else {
+              snake.altitude = Math.min(b.height + 1.5, snake.altitude + 24 * dt);
+              snake.headPos.copy(snake.up).multiplyScalar(CONFIG.PLANET_RADIUS + snake.altitude);
+            }
+          }
+        }
+      }
+
+      // 5. Update Realistic Anaconda Head, Hinged Jaw & Flicking Forked Tongue
+      snake.headGroup.position.copy(snake.headPos);
+      const lookTarget = snake.headPos.clone().add(snake.forward);
+      const m4 = new THREE.Matrix4().lookAt(lookTarget, snake.headPos, snake.up);
+      snake.headGroup.quaternion.setFromRotationMatrix(m4);
+
+      // Animate lower jaw opening wide when biting/swallowing or spitting acid
+      if (snake.lowerJawGroup) {
+        const targetJawRot = snake.biteTimer > 0 ? 0.58 : 0.04 + Math.sin(elapsed * 4.0) * 0.02;
+        snake.lowerJawGroup.rotation.x += (targetJawRot - snake.lowerJawGroup.rotation.x) * 0.28;
+      }
+
+      // Animate realistic periodic forked-tongue flicking (scenting the air)
+      if (snake.tongueGroup) {
+        const flickCycle = (elapsed * 1.6) % 2.4;
+        if (flickCycle < 0.65) {
+          const ext = 0.4 + 0.75 * Math.abs(Math.sin(flickCycle * 14.0));
+          snake.tongueGroup.scale.set(1, 1, ext);
+          snake.tongueGroup.rotation.x = Math.sin(elapsed * 42.0) * 0.22;
+          snake.tongueGroup.visible = true;
+        } else {
+          snake.tongueGroup.visible = false;
+        }
+      }
+
+      // Record Head Position in Path History
+      if (snake.pathHistory.length === 0 || snake.headPos.distanceTo(snake.pathHistory[0]) > 0.28) {
+        snake.pathHistory.unshift(snake.headPos.clone());
+        if (snake.pathHistory.length > CONFIG.MAX_SEGMENTS * 6) {
+          snake.pathHistory.pop();
+        }
+      }
+
+      // Update Swallow Bulges (food lumps) traveling down the stomach
+      for (let i = snake.bulges.length - 1; i >= 0; i--) {
+        snake.bulges[i].progress += dt * 1.45;
+        if (snake.bulges[i].progress >= 1.0) snake.bulges.splice(i, 1);
+      }
+
+      /*
+       * Position, Orient & Shape All 40+ Anaconda Body Segments:
+       * - Real anacondas have a distinct neck constriction behind the head, a thick muscular
+       *   mid-body (girth), and a long tapering prehensile tail.
+       * - Propagating lateral S-wave undulation travels down the body.
+       */
+      const rampScale = state.rampageTime > 0 ? 1.28 : 1.0;
+      for (let i = 0; i < snake.segmentCount; i++) {
+        const segMesh = snake.segmentMeshes[i];
+        const histIdx = Math.min(snake.pathHistory.length - 1, (i + 1) * 3);
+        const prevIdx = Math.max(0, histIdx - 2);
+        const basePos = snake.pathHistory[histIdx];
+        const aheadPos = snake.pathHistory[prevIdx];
+
+        const segUp = tempVecA.copy(basePos).normalize();
+        const segForward = tempVecB.copy(aheadPos).sub(basePos);
+        if (segForward.lengthSq() < 0.0001) segForward.copy(snake.forward);
+        else segForward.normalize();
+        const segRight = segForward.clone().cross(segUp).normalize();
+
+        const t = i / snake.segmentCount;
+
+        // Lateral S-curve wave propagating from neck to tail tip (suppressed while tightly coiling a tower)
+        const waveAmp = snake.coilingTarget ? 0.05 : Math.sin(t * Math.PI) * 0.72;
+        const waveOffset = Math.sin(elapsed * 9.5 - i * 0.36) * waveAmp;
+
+        segMesh.position.copy(basePos).addScaledVector(segRight, waveOffset);
+
+        // Orient segment along local spine tangent so ventral belly scutes stay underneath
+        const segLook = segMesh.position.clone().add(segForward);
+        dummyObj.position.copy(segMesh.position);
+        dummyObj.up.copy(segUp);
+        dummyObj.lookAt(segLook);
+        segMesh.quaternion.copy(dummyObj.quaternion);
+
+        // Realistic Anaconda Girth Profile: slight neck, thick muscular mid-body, tapered tail
+        let girthProfile;
+        if (t < 0.08) {
+          girthProfile = 0.82 + (t / 0.08) * 0.22; // Neck widens into body
+        } else if (t < 0.48) {
+          girthProfile = 1.04 + Math.sin(((t - 0.08) / 0.40) * Math.PI) * 0.18; // Heavy muscular mid-body
+        } else {
+          girthProfile = Math.max(0.14, 1.04 * (1.0 - (t - 0.48) / 0.52)); // Smooth tail taper
+        }
+
+        let radiusScale = girthProfile * rampScale;
+
+        // Apply any swallowed prey lumps moving down the stomach
+        for (let b = 0; b < snake.bulges.length; b++) {
+          const distT = Math.abs(t - snake.bulges[b].progress);
+          if (distT < 0.12) {
+            radiusScale += (1.0 - distT / 0.12) * 0.65;
+          }
+        }
+
+        // Slightly oval/flattened reptile cross-section (wider than tall, elongated along spine)
+        segMesh.scale.set(radiusScale * 1.14, radiusScale * 0.82, radiusScale * 1.38);
+      }
+
+      // 6. Update Prey & Food Magnet / Swallowing
+      const magnetRange = state.mutations.magnet ? 19.0 : 4.2;
+      for (let i = preys.length - 1; i >= 0; i--) {
+        const p = preys[i];
+        p.pos.addScaledVector(p.dir, p.speed * dt);
+        p.normal.copy(p.pos).normalize();
+        p.pos.copy(p.normal).multiplyScalar(CONFIG.PLANET_RADIUS + p.alt);
+        p.dir.projectOnPlane(p.normal).normalize();
+        p.mesh.position.copy(p.pos);
+
+        const dToHead = p.pos.distanceTo(snake.headPos);
+        if (dToHead < magnetRange) {
+          p.pos.lerp(snake.headPos, dt * 8.5);
+        }
+        if (dToHead < 3.8) {
+          consumePrey(i);
+        }
+      }
+
+      // 7. Update Enemies
+      if (Math.random() < 0.025 * CONFIG.DIFFICULTY[state.difficulty].enemyRate) {
+        spawnEnemyUnit();
+      }
+
+      const targetPos = state.decoy ? state.decoy.pos : snake.headPos;
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+        const toTarget = tempVecA.copy(targetPos).sub(e.pos).projectOnPlane(e.normal).normalize();
+        const dist = e.pos.distanceTo(targetPos);
+
+        if (dist > 16) {
+          e.pos.addScaledVector(toTarget, e.speed * dt);
+          e.normal.copy(e.pos).normalize();
+          e.pos.copy(e.normal).multiplyScalar(CONFIG.PLANET_RADIUS + e.alt);
+        }
+        e.mesh.position.copy(e.pos);
+        e.mesh.lookAt(targetPos);
+
+        if (e.pos.distanceTo(snake.headPos) < 4.4) {
+          destroyEnemy(i);
+          continue;
+        }
+
+        e.fireCooldown -= dt;
+        if (e.fireCooldown <= 0 && dist < 58) {
+          e.fireCooldown = 2.4;
+          const fireDir = tempVecB.copy(targetPos).sub(e.pos).normalize();
+          spawnProjectile(e.pos, fireDir, false, 0xff2255, 8);
+        }
+      }
+
+      // 8. Update Active Zone Boss
+      if (state.boss) {
+        const boss = state.boss;
+        boss.coreMesh.rotation.y += dt * 2.2;
+        boss.shieldRing.rotation.x += dt * 3.1;
+
+        const toSnake = tempVecA.copy(targetPos).sub(boss.pos).projectOnPlane(boss.normal).normalize();
+        const bossSpeed = boss.type === 'mongoose' ? 19 : 11;
+        if (boss.pos.distanceTo(targetPos) > 15) {
+          boss.pos.addScaledVector(toSnake, bossSpeed * dt);
+          boss.normal.copy(boss.pos).normalize();
+          boss.pos.copy(boss.normal).multiplyScalar(CONFIG.PLANET_RADIUS + boss.alt);
+        }
+        boss.mesh.position.copy(boss.pos);
+        boss.mesh.lookAt(targetPos);
+
+        boss.attackTimer -= dt;
+        if (boss.attackTimer <= 0) {
+          boss.attackTimer = boss.phase === 2 ? 2.6 : 4.0;
+          boss.telegraphTimer = 1.1;
+          boss.telegraphRing.position.copy(targetPos).normalize().multiplyScalar(CONFIG.PLANET_RADIUS + 0.6);
+          boss.telegraphRing.lookAt(0, 0, 0);
+        }
+
+        if (boss.telegraphTimer > 0) {
+          boss.telegraphTimer -= dt;
+          boss.telegraphRing.material.opacity = 0.65;
+          if (boss.telegraphTimer <= 0) {
+            boss.telegraphRing.material.opacity = 0;
+            spawnParticles(boss.telegraphRing.position, 0xff2244, 22, 26);
+            audio.playSfx('explosion');
+            if (snake.headPos.distanceTo(boss.telegraphRing.position) < 14) {
+              damageSnake(18);
+            }
+          }
+        }
+
+        if (boss.pos.distanceTo(snake.headPos) < 7.5) {
+          if (wantsBoost || state.rampageTime > 0 || keys.e) {
+            damageBoss(55 * dt);
+          } else {
+            damageSnake(12 * dt);
+          }
+        }
+      }
+
+      // 9. Update Projectiles
+      for (let i = projectiles.length - 1; i >= 0; i--) {
+        const pr = projectiles[i];
+        pr.life -= dt;
+        pr.pos.addScaledVector(pr.dir, pr.speed * dt);
+        pr.mesh.position.copy(pr.pos);
+
+        if (pr.isPlayer) {
+          let hit = false;
+          for (let j = enemies.length - 1; j >= 0; j--) {
+            if (enemies[j].pos.distanceTo(pr.pos) < 3.6) {
+              enemies[j].hp -= pr.damage;
+              spawnParticles(pr.pos, 0x84cc16, 8, 16);
+              if (enemies[j].hp <= 0) destroyEnemy(j);
+              hit = true;
+              break;
+            }
+          }
+          if (!hit && state.boss && state.boss.pos.distanceTo(pr.pos) < 7.0) {
+            damageBoss(pr.damage);
+            hit = true;
+          }
+          if (!hit) {
+            for (let bIdx = 0; bIdx < buildings.length; bIdx++) {
+              const b = buildings[bIdx];
+              if (b.alive && b.pos.distanceTo(pr.pos) < 4.5) {
+                b.hp -= pr.damage;
+                updateBuildingMatrix(b);
+                if (b.hp <= 0) destroyBuilding(b);
+                hit = true;
+                break;
+              }
+            }
+          }
+          if (hit) pr.life = 0;
+        } else {
+          if (pr.pos.distanceTo(snake.headPos) < 3.4) {
+            damageSnake(pr.damage);
+            pr.life = 0;
+          }
+        }
+
+        if (pr.life <= 0) {
+          worldGroup.remove(pr.mesh);
+          projectiles.splice(i, 1);
+        }
+      }
+
+      // 10. Update Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const pt = particles[i];
+        pt.life -= dt;
+        pt.mesh.position.addScaledVector(pt.vel, dt);
+        pt.mesh.scale.setScalar(Math.max(0.01, pt.life));
+        if (pt.life <= 0) {
+          worldGroup.remove(pt.mesh);
+          particles.splice(i, 1);
+        }
+      }
+
+      // 11. Smooth Planetary Chase Camera
+      const growthZoom = 1.0 + (snake.segmentCount - CONFIG.INITIAL_SEGMENTS) * 0.012;
+      const desiredCamPos = snake.headPos.clone()
+        .addScaledVector(snake.forward, -22 * growthZoom)
+        .addScaledVector(snake.up, 13.5 * growthZoom);
+
+      if (state.cameraShake > 0) {
+        state.cameraShake = Math.max(0, state.cameraShake - rawDt * 2.4);
+        desiredCamPos.add(new THREE.Vector3(
+          (Math.random() - 0.5) * state.cameraShake * 3.2,
+          (Math.random() - 0.5) * state.cameraShake * 3.2,
+          (Math.random() - 0.5) * state.cameraShake * 3.2
+        ));
+      }
+
+      camera.position.lerp(desiredCamPos, 0.14);
+      camera.up.lerp(snake.up, 0.12).normalize();
+      const camLookAt = snake.headPos.clone().addScaledVector(snake.forward, 10);
+      camera.lookAt(camLookAt);
+    }
+
+    /* ============================================================================
+     * 13. HUD, CIRCULAR PLANETARY MINIMAP & UI UPDATES
+     * ============================================================================ */
+    const minimapCanvas = document.getElementById('minimap-canvas');
+    const minimapCtx = minimapCanvas.getContext('2d');
+
+    function updateHUD() {
+      document.getElementById('hud-snake-title').textContent = `SNAKE LEVEL ${snake.level}`;
+      document.getElementById('hud-length-text').textContent = `LENGTH: ${snake.segmentCount}`;
+
+      const hpPct = Math.round((snake.hp / snake.maxHp) * 100);
+      document.getElementById('hud-hp-text').textContent = `${Math.ceil(snake.hp)} / ${snake.maxHp}`;
+      document.getElementById('hud-hp-bar').style.width = `${Math.max(0, Math.min(100, hpPct))}%`;
+
+      document.getElementById('hud-stamina-text').textContent = `${Math.round(snake.stamina)}%`;
+      document.getElementById('hud-stamina-bar').style.width = `${snake.stamina}%`;
+
+      const xpPct = Math.min(100, Math.round((snake.xp / snake.nextXp) * 100));
+      document.getElementById('hud-xp-text').textContent = `${Math.floor(snake.xp)} / ${snake.nextXp}`;
+      document.getElementById('hud-xp-bar').style.width = `${xpPct}%`;
+
+      document.getElementById('hud-score').textContent = state.score.toLocaleString().padStart(7, '0');
+      document.getElementById('hud-combo-text').textContent = `${state.combo.toFixed(1)}x COMBO`;
+      document.getElementById('hud-rampage-bar').style.width = `${state.rampageTime > 0 ? (state.rampageTime / 8) * 100 : state.rampageMeter}%`;
+      document.getElementById('hud-rampage-label').textContent = state.rampageTime > 0 ? '🔥 ON FIRE!' : 'RAMPAGE';
+
+      const starsContainer = document.getElementById('hud-hunt-stars');
+      let starsHtml = '';
+      for (let i = 1; i <= 5; i++) {
+        starsHtml += `<span class="${i <= state.huntLevel ? 'text-amber-400' : 'text-slate-600'} text-sm">★</span>`;
+      }
+      starsContainer.innerHTML = starsHtml;
+
+      const d = state.currentDistrict;
+      const dInfo = CONFIG.DISTRICTS[d];
+      const pct = Math.min(100, Math.round((state.districtDestroyed[d] / Math.max(1, state.districtTotals[d] * 0.45)) * 100));
+      document.getElementById('hud-district-name').textContent = state.mode === 'campaign'
+        ? `ZONE ${d + 1}: ${dInfo.name}`
+        : `ENDLESS MODE // ${dInfo.name}`;
+      document.getElementById('hud-destruction-pct').textContent = state.mode === 'campaign' ? `${pct}% / 70%` : `${pct}% CRUSHED`;
+      document.getElementById('hud-district-bar').style.width = `${Math.min(100, (pct / 70) * 100)}%`;
+
+      if (state.boss) {
+        document.getElementById('hud-objective-text').textContent = `DEFEAT THE BOSS: ${state.boss.name}!`;
+        document.getElementById('hud-boss-bar').style.width = `${Math.max(0, (state.boss.hp / state.boss.maxHp) * 100)}%`;
+      } else if (state.mode === 'campaign') {
+        document.getElementById('hud-objective-text').textContent = `Destroy 70% of ${dInfo.name} to call out ${dInfo.bossName}!`;
+      } else {
+        document.getElementById('hud-objective-text').textContent = `Endless Mode: Eat cars, crush towers & beat your High Score!`;
+      }
+
+      document.getElementById('cd-venom').textContent = state.cooldowns.venom > 0 ? `${state.cooldowns.venom.toFixed(1)}s` : 'READY';
+      document.getElementById('cd-roar').textContent  = state.cooldowns.roar > 0  ? `${state.cooldowns.roar.toFixed(1)}s`  : 'READY';
+      document.getElementById('cd-vision').textContent = state.cooldowns.vision > 0 ? `${state.cooldowns.vision.toFixed(1)}s` : 'READY';
+      document.getElementById('cd-shed').textContent   = state.cooldowns.shed > 0   ? `${state.cooldowns.shed.toFixed(1)}s`   : 'READY';
+
+      // Draw Circular Planetary Radar Minimap
+      minimapCtx.clearRect(0, 0, 96, 96);
+      minimapCtx.strokeStyle = 'rgba(0, 255, 204, 0.25)';
+      minimapCtx.beginPath();
+      minimapCtx.arc(48, 48, 42, 0, Math.PI * 2);
+      minimapCtx.moveTo(48, 6); minimapCtx.lineTo(48, 90);
+      minimapCtx.moveTo(6, 48); minimapCtx.lineTo(90, 48);
+      minimapCtx.stroke();
+
+      const rightAxis = snake.forward.clone().cross(snake.up).normalize();
+      for (let i = 0; i < buildings.length; i++) {
+        const b = buildings[i];
+        if (!b.alive) continue;
+        const rel = tempVecA.copy(b.pos).sub(snake.headPos);
+        if (rel.length() < 95) {
+          const rx = rel.dot(rightAxis) * 0.45;
+          const ry = -rel.dot(snake.forward) * 0.45;
+          if (rx * rx + ry * ry < 1600) {
+            minimapCtx.fillStyle = CONFIG.DISTRICTS[b.district].accent;
+            minimapCtx.fillRect(48 + rx - 1.5, 48 + ry - 1.5, 3, 3);
+          }
+        }
+      }
+      minimapCtx.fillStyle = '#ff2255';
+      for (let i = 0; i < enemies.length; i++) {
+        const rel = tempVecA.copy(enemies[i].pos).sub(snake.headPos);
+        const rx = rel.dot(rightAxis) * 0.45;
+        const ry = -rel.dot(snake.forward) * 0.45;
+        if (rx * rx + ry * ry < 1600) {
+          minimapCtx.beginPath();
+          minimapCtx.arc(48 + rx, 48 + ry, 2.5, 0, Math.PI * 2);
+          minimapCtx.fill();
+        }
+      }
+      if (state.boss) {
+        const rel = tempVecA.copy(state.boss.pos).sub(snake.headPos);
+        const rx = Math.max(-38, Math.min(38, rel.dot(rightAxis) * 0.45));
+        const ry = Math.max(-38, Math.min(38, -rel.dot(snake.forward) * 0.45));
+        minimapCtx.fillStyle = '#fbbf24';
+        minimapCtx.beginPath();
+        minimapCtx.arc(48 + rx, 48 + ry, 4.5, 0, Math.PI * 2);
+        minimapCtx.fill();
+      }
+      minimapCtx.fillStyle = '#00ffcc';
+      minimapCtx.beginPath();
+      minimapCtx.moveTo(48, 42);
+      minimapCtx.lineTo(44, 52);
+      minimapCtx.lineTo(52, 52);
+      minimapCtx.closePath();
+      minimapCtx.fill();
+    }
+
+    let toastTimeout = null;
+    function showToast(msg) {
+      const el = document.getElementById('hud-toast');
+      el.textContent = msg;
+      el.style.opacity = '1';
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => { el.style.opacity = '0'; }, 2400);
+    }
+
+    /* ============================================================================
+     * 14. UPGRADE MODAL & LOCALSTORAGE HIGH SCORES
+     * ============================================================================ */
+    let currentMutationPool = [];
+
+    function openEvolutionModal() {
+      state.status = 'evolving';
+      const modal = document.getElementById('evolution-modal');
+      const container = document.getElementById('mutation-choices');
+      container.innerHTML = '';
+
+      const shuffled = [...CONFIG.MUTATIONS].sort(() => Math.random() - 0.5);
+      currentMutationPool = shuffled.slice(0, 3);
+
+      currentMutationPool.forEach((m, idx) => {
+        const rank = (state.mutations[m.id] || 0) + 1;
+        const btn = document.createElement('button');
+        btn.className = 'cyber-btn rounded-xl p-4 text-left flex flex-col justify-between h-full';
+        btn.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-2xl">${m.icon}</span>
+              <span class="text-[11px] font-cyber px-2 py-0.5 rounded bg-fuchsia-500/30 text-fuchsia-200">KEY [${idx + 1}] • LV.${rank}</span>
+            </div>
+            <div class="font-cyber text-sm font-bold text-teal-300 mb-1">${m.name}</div>
+            <p class="text-xs text-slate-300">${m.desc}</p>
+          </div>
+          <div class="mt-3 text-[11px] font-cyber text-pink-300 font-bold">PICK UPGRADE →</div>
+        `;
+        btn.addEventListener('click', () => selectMutation(m));
+        container.appendChild(btn);
+      });
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function selectMutation(m) {
+      state.mutations[m.id] = (state.mutations[m.id] || 0) + 1;
+      if (m.id === 'armor') {
+        snake.maxHp += 30;
+        snake.hp = Math.min(snake.maxHp, snake.hp + 30);
+      }
+
+      const hudMut = document.getElementById('hud-mutations');
+      hudMut.innerHTML = '';
+      CONFIG.MUTATIONS.forEach(mut => {
+        if (state.mutations[mut.id]) {
+          const pill = document.createElement('span');
+          pill.className = 'px-1.5 py-0.5 rounded bg-teal-500/20 border border-teal-400/40 text-[10px] font-cyber text-teal-200';
+          pill.textContent = `${mut.icon} ${mut.name} Lv.${state.mutations[mut.id]}`;
+          hudMut.appendChild(pill);
+        }
+      });
+
+      const modal = document.getElementById('evolution-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      state.status = 'playing';
+      showToast(`🧬 UPGRADE ADDED: ${m.name.toUpperCase()}!`);
+    }
+
+    const LB_KEY = 'anaconda_titan_coil_lb_v1';
+    const DEFAULT_LB = [
+      { name: 'GREEN-TITAN', score: 42800, mode: 'STORY' },
+      { name: 'AMAZON-BOA',  score: 31450, mode: 'ENDLESS' },
+      { name: 'RIVER-KING',  score: 19200, mode: 'STORY' }
+    ];
+
+    function loadLeaderboard() {
+      try {
+        const raw = localStorage.getItem(LB_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return [...DEFAULT_LB];
+    }
+
+    function saveLeaderboardEntry(name, score, mode) {
+      const list = loadLeaderboard();
+      list.push({ name: (name || 'ANACONDA').toUpperCase().slice(0, 14), score, mode: mode.toUpperCase() });
+      list.sort((a, b) => b.score - a.score);
+      const trimmed = list.slice(0, 8);
+      try {
+        localStorage.setItem(LB_KEY, JSON.stringify(trimmed));
+      } catch (e) {}
+      renderLeaderboard();
+    }
+
+    function renderLeaderboard() {
+      const list = loadLeaderboard();
+      const el = document.getElementById('title-leaderboard');
+      el.innerHTML = list.map((item, idx) => `
+        <div class="flex items-center justify-between bg-slate-900/75 px-2.5 py-1.5 rounded border border-teal-500/20">
+          <span class="font-cyber text-teal-300 font-bold">#${idx + 1} ${item.name}</span>
+          <span class="text-pink-400 font-cyber font-bold">${item.score.toLocaleString()}</span>
+        </div>
+      `).join('');
+    }
+
+    /* ============================================================================
+     * 15. GAME FLOW (START, PAUSE, GAME OVER) & EVENT LISTENERS
+     * ============================================================================ */
+    function startGame() {
+      audio.init();
+      state.seed = document.getElementById('seed-input').value.trim() || 'ANACONDA-2099';
+      state.score = 0;
+      state.combo = 1.0;
+      state.maxCombo = 1.0;
+      state.rampageMeter = 0;
+      state.rampageTime = 0;
+      state.predatorTime = 0;
+      state.huntLevel = 1;
+      state.currentDistrict = 0;
+      state.buildingsCrushed = 0;
+      state.unitsEaten = 0;
+      state.bossesSlain = 0;
+      state.mutations = {};
+      state.boss = null;
+      state.decoy = null;
+      state.cooldowns = { venom: 0, roar: 0, vision: 0, shed: 0 };
+
+      document.getElementById('hud-mutations').innerHTML = '';
+      document.getElementById('hud-boss-panel').classList.add('hidden');
+      document.getElementById('predator-overlay').style.opacity = '0';
+      document.getElementById('rampage-overlay').style.opacity = '0';
+
+      generateWorld(state.seed);
+      initSnake();
+
+      document.getElementById('title-screen').classList.add('hidden');
+      document.getElementById('pause-modal').classList.add('hidden');
+      document.getElementById('pause-modal').classList.remove('flex');
+      document.getElementById('gameover-modal').classList.add('hidden');
+      document.getElementById('gameover-modal').classList.remove('flex');
+      document.getElementById('hud-layer').classList.remove('hidden');
+      document.getElementById('hud-layer').classList.add('flex');
+
+      state.status = 'playing';
+      showToast('🐍 SLITHER AROUND THE PLANET & EAT THE CITY!');
+    }
+
+    function triggerGameOver(victory = false) {
+      state.status = 'gameover';
+      document.getElementById('gameover-badge').textContent = victory ? 'ALL 4 CITY ZONES CONQUERED!' : 'OUT OF HEALTH';
+      document.getElementById('gameover-title').textContent = victory ? 'YOU WON!' : 'GAME OVER';
+      document.getElementById('stat-score').textContent = state.score.toLocaleString();
+      document.getElementById('stat-length').textContent = `Length ${snake.segmentCount} (Lv.${snake.level})`;
+      document.getElementById('stat-buildings').textContent = state.buildingsCrushed;
+      document.getElementById('stat-eaten').textContent = state.unitsEaten;
+      document.getElementById('stat-bosses').textContent = state.bossesSlain;
+      document.getElementById('stat-combo').textContent = `${state.maxCombo.toFixed(1)}x`;
+      document.getElementById('btn-save-score').disabled = false;
+      document.getElementById('btn-save-score').textContent = 'SAVE';
+
+      const modal = document.getElementById('gameover-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    document.getElementById('btn-start-game').addEventListener('click', startGame);
+    document.getElementById('btn-play-again').addEventListener('click', startGame);
+    document.getElementById('btn-restart').addEventListener('click', startGame);
+
+    document.getElementById('btn-pause').addEventListener('click', () => {
+      if (state.status === 'playing') {
+        state.status = 'paused';
+        const pm = document.getElementById('pause-modal');
+        pm.classList.remove('hidden');
+        pm.classList.add('flex');
+      }
+    });
+
+    document.getElementById('btn-resume').addEventListener('click', () => {
+      if (state.status === 'paused') {
+        state.status = 'playing';
+        const pm = document.getElementById('pause-modal');
+        pm.classList.add('hidden');
+        pm.classList.remove('flex');
+      }
+    });
+
+    function returnToMainMenu() {
+      state.status = 'menu';
+      document.getElementById('pause-modal').classList.add('hidden');
+      document.getElementById('pause-modal').classList.remove('flex');
+      document.getElementById('gameover-modal').classList.add('hidden');
+      document.getElementById('gameover-modal').classList.remove('flex');
+      document.getElementById('hud-layer').classList.add('hidden');
+      document.getElementById('hud-layer').classList.remove('flex');
+      document.getElementById('title-screen').classList.remove('hidden');
+      renderLeaderboard();
+    }
+
+    document.getElementById('btn-main-menu').addEventListener('click', returnToMainMenu);
+    document.getElementById('btn-gameover-menu').addEventListener('click', returnToMainMenu);
+
+    // Theme & Mute Controls
+    const themeHandler = () => toggleTheme();
+    const muteHandler = () => audio.toggleMute();
+
+    const tBtn = document.getElementById('btn-theme');
+    if (tBtn) tBtn.addEventListener('click', themeHandler);
+    const tTitleBtn = document.getElementById('btn-title-theme');
+    if (tTitleBtn) tTitleBtn.addEventListener('click', themeHandler);
+    const tPauseBtn = document.getElementById('btn-pause-theme');
+    if (tPauseBtn) tPauseBtn.addEventListener('click', themeHandler);
+
+    const mBtn = document.getElementById('btn-mute');
+    if (mBtn) mBtn.addEventListener('click', muteHandler);
+    const mTitleBtn = document.getElementById('btn-title-mute');
+    if (mTitleBtn) mTitleBtn.addEventListener('click', muteHandler);
+    const mPauseBtn = document.getElementById('btn-pause-mute');
+    if (mPauseBtn) mPauseBtn.addEventListener('click', muteHandler);
+
+    // Snake Skin Buttons
+    for (let i = 0; i < 4; i++) {
+      const sb = document.getElementById(`skin-btn-${i}`);
+      if (sb) {
+        sb.addEventListener('click', () => {
+          applySkin(i);
+          audio.playSfx('swallow');
+        });
+      }
+    }
+
+    document.getElementById('btn-camera-steer').addEventListener('click', (e) => {
+      state.mouseSteerEnabled = !state.mouseSteerEnabled;
+      e.currentTarget.textContent = state.mouseSteerEnabled ? '🖱️ ON' : '🖱️ AUTO';
+    });
+
+    document.getElementById('btn-random-seed').addEventListener('click', () => {
+      const words = ['AMAZON', 'ANACONDA', 'JUNGLE', 'RIVER', 'VIPER', 'COBRA', 'TITAN'];
+      const w = words[Math.floor(Math.random() * words.length)];
+      document.getElementById('seed-input').value = `${w}-${Math.floor(1000 + Math.random() * 9000)}`;
+    });
+
+    document.getElementById('mode-campaign').addEventListener('click', () => {
+      state.mode = 'campaign';
+      document.getElementById('mode-campaign').classList.add('cyber-btn-active');
+      document.getElementById('mode-endless').classList.remove('cyber-btn-active');
+      document.getElementById('mode-desc').innerHTML = '<strong>Story Mode:</strong> Destroy 70% of each city zone to bring out its Boss. Beat all 4 Bosses to win!';
+    });
+
+    document.getElementById('mode-endless').addEventListener('click', () => {
+      state.mode = 'endless';
+      document.getElementById('mode-endless').classList.add('cyber-btn-active');
+      document.getElementById('mode-campaign').classList.remove('cyber-btn-active');
+      document.getElementById('mode-desc').innerHTML = '<strong>Endless Mode:</strong> No zone limits! Survive 1–5 Star enemy waves and go for the highest score.';
+    });
+
+    ['easy', 'normal', 'hard'].forEach(d => {
+      document.getElementById(`diff-${d}`).addEventListener('click', () => {
+        state.difficulty = d;
+        ['easy', 'normal', 'hard'].forEach(k => {
+          document.getElementById(`diff-${k}`).classList.toggle('cyber-btn-active', k === d);
+        });
+      });
+    });
+
+    document.getElementById('btn-save-score').addEventListener('click', (e) => {
+      const name = document.getElementById('player-name-input').value;
+      saveLeaderboardEntry(name, state.score, state.mode);
+      e.currentTarget.textContent = 'SAVED ✓';
+      e.currentTarget.disabled = true;
+    });
+
+    document.getElementById('btn-clear-scores').addEventListener('click', () => {
+      try { localStorage.removeItem(LB_KEY); } catch (e) {}
+      renderLeaderboard();
+    });
+
+    // Hotbar & Touch Ability Buttons
+    document.getElementById('abil-boost').addEventListener('pointerdown', () => { keys.shift = true; });
+    document.getElementById('abil-boost').addEventListener('pointerup',   () => { keys.shift = false; });
+    document.getElementById('abil-jump').addEventListener('click', triggerLungeJump);
+    document.getElementById('abil-coil').addEventListener('pointerdown', () => { keys.e = true; });
+    document.getElementById('abil-coil').addEventListener('pointerup',   () => { keys.e = false; });
+    document.getElementById('abil-venom').addEventListener('click', triggerVenomSpit);
+    document.getElementById('abil-roar').addEventListener('click', triggerRoarAndTailWhip);
+    document.getElementById('abil-vision').addEventListener('click', triggerPredatorVision);
+    document.getElementById('abil-shed').addEventListener('click', triggerShedSkin);
+
+    const bindHold = (id, keyProp) => {
+      const el = document.getElementById(id);
+      el.addEventListener('pointerdown', (e) => { e.preventDefault(); keys[keyProp] = true; });
+      el.addEventListener('pointerup',   (e) => { e.preventDefault(); keys[keyProp] = false; });
+      el.addEventListener('pointercancel', () => { keys[keyProp] = false; });
+    };
+    bindHold('touch-boost', 'shift');
+    bindHold('touch-coil', 'e');
+    document.getElementById('touch-jump').addEventListener('pointerdown', (e) => { e.preventDefault(); triggerLungeJump(); });
+    document.getElementById('touch-venom').addEventListener('pointerdown', (e) => { e.preventDefault(); triggerVenomSpit(); });
+    document.getElementById('touch-roar').addEventListener('pointerdown', (e) => { e.preventDefault(); triggerRoarAndTailWhip(); });
+    document.getElementById('touch-vision').addEventListener('pointerdown', (e) => { e.preventDefault(); triggerPredatorVision(); });
+
+    const joyZone = document.getElementById('joystick-zone');
+    const joyKnob = document.getElementById('joystick-knob');
+    joyZone.addEventListener('pointerdown', (e) => {
+      joyInput.active = true;
+      joyZone.setPointerCapture(e.pointerId);
+      updateJoystick(e);
+    });
+    joyZone.addEventListener('pointermove', (e) => {
+      if (joyInput.active) updateJoystick(e);
+    });
+    const releaseJoystick = () => {
+      joyInput.active = false;
+      joyInput.x = 0; joyInput.y = 0;
+      joyKnob.style.transform = `translate(0px, 0px)`;
+    };
+    joyZone.addEventListener('pointerup', releaseJoystick);
+    joyZone.addEventListener('pointercancel', releaseJoystick);
+
+    function updateJoystick(e) {
+      const rect = joyZone.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const maxR = rect.width * 0.38;
+      let dx = e.clientX - cx;
+      let dy = e.clientY - cy;
+      const dist = Math.hypot(dx, dy);
+      if (dist > maxR) {
+        dx = (dx / dist) * maxR;
+        dy = (dy / dist) * maxR;
+      }
+      joyInput.x = dx / maxR;
+      joyInput.y = dy / maxR;
+      joyKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+    }
+
+    window.addEventListener('keydown', (e) => {
+      const k = e.key.toLowerCase();
+      if (k === 'w' || e.key === 'ArrowUp') keys.w = true;
+      if (k === 's' || e.key === 'ArrowDown') keys.s = true;
+      if (k === 'a' || e.key === 'ArrowLeft') keys.a = true;
+      if (k === 'd' || e.key === 'ArrowRight') keys.d = true;
+      if (e.key === 'Shift') keys.shift = true;
+      if (k === 'e') keys.e = true;
+      if (e.code === 'Space') { e.preventDefault(); triggerLungeJump(); }
+      if (k === 'q') triggerVenomSpit();
+      if (k === 'f') triggerRoarAndTailWhip();
+      if (k === 'r') triggerPredatorVision();
+      if (k === 'x') triggerShedSkin();
+      if (k === 'm') {
+        audio.toggleMute();
+      }
+      if (k === 'l') {
+        toggleTheme();
+      }
+      if (e.key === 'Escape' || k === 'p') {
+        if (state.status === 'playing') document.getElementById('btn-pause').click();
+        else if (state.status === 'paused') document.getElementById('btn-resume').click();
+      }
+      if (state.status === 'evolving') {
+        if (k === '1' && currentMutationPool[0]) selectMutation(currentMutationPool[0]);
+        if (k === '2' && currentMutationPool[1]) selectMutation(currentMutationPool[1]);
+        if (k === '3' && currentMutationPool[2]) selectMutation(currentMutationPool[2]);
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      const k = e.key.toLowerCase();
+      if (k === 'w' || e.key === 'ArrowUp') keys.w = false;
+      if (k === 's' || e.key === 'ArrowDown') keys.s = false;
+      if (k === 'a' || e.key === 'ArrowLeft') keys.a = false;
+      if (k === 'd' || e.key === 'ArrowRight') keys.d = false;
+      if (e.key === 'Shift') keys.shift = false;
+      if (k === 'e') keys.e = false;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      state.mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    /* ============================================================================
+     * 16. MAIN GAME LOOP & INITIALIZATION
+     * ============================================================================ */
+    let lastTime = performance.now();
+    let accumulator = 0;
+
+    function animate(now) {
+      requestAnimationFrame(animate);
+      const frameDt = Math.min(0.1, (now - lastTime) / 1000);
+      lastTime = now;
+
+      if (state.status === 'playing') {
+        accumulator += frameDt;
+        while (accumulator >= CONFIG.FIXED_DT) {
+          updateSimulation(CONFIG.FIXED_DT);
+          accumulator -= CONFIG.FIXED_DT;
+        }
+        updateHUD();
+      } else if (state.status === 'menu') {
+        const t = now * 0.00025;
+        snakeShaderUniforms.uTime.value = now * 0.001;
+        camera.position.set(Math.cos(t) * 165, 65 + Math.sin(t * 1.5) * 25, Math.sin(t) * 165);
+        camera.up.set(0, 1, 0);
+        camera.lookAt(0, 0, 0);
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    window.onload = () => {
+      renderLeaderboard();
+      generateWorld(state.seed);
+      initSnake();
+      applyTheme(state.theme);
+      applySkin(state.skin);
+      updateMuteUI();
+      requestAnimationFrame(animate);
+    };
+  </script>
+</body>
+</html>
