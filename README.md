@@ -1,6 +1,7 @@
 # ANACONDA: TITAN COIL
 ### *Eat the City. Coil the Sky.*
 
+[![GitHub Pages](https://img.shields.io/badge/Live_Demo-GitHub_Pages-22c55e?style=for-the-badge&logo=github)](https://jayvirjadeja008-gif.github.io/anaconda-titan-coil/)
 [![WebGL 3D](https://img.shields.io/badge/WebGL-Three.js_r128-00ffcc?style=for-the-badge&logo=three.js)](https://threejs.org/)
 [![Web Audio API](https://img.shields.io/badge/Audio-Web_Audio_Synth-ff00aa?style=for-the-badge)](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
 [![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-v3.4-38bdf8?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
@@ -11,8 +12,8 @@ An arcade-grade, full-screen **3D WebGL giant snake city destruction simulation 
 ---
 
 ## 🎮 Play Live
-- **GitHub Repository**: [https://github.com/jayvirjadeja008-gif/anaconda-titan-coil](https://github.com/jayvirjadeja008-gif/anaconda-titan-coil)
-- **GitHub Pages**: Once enabled in repo Settings -> Pages -> Deploy from branch `main` (`/` root), the game is live at `https://jayvirjadeja008-gif.github.io/anaconda-titan-coil/`
+- **🌐 Public Live URL**: [https://jayvirjadeja008-gif.github.io/anaconda-titan-coil/](https://jayvirjadeja008-gif.github.io/anaconda-titan-coil/)
+- **📁 GitHub Repository**: [https://github.com/jayvirjadeja008-gif/anaconda-titan-coil](https://github.com/jayvirjadeja008-gif/anaconda-titan-coil)
 
 ---
 
